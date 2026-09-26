@@ -1,17 +1,22 @@
 # SealCore
 
-All-in-one economy SMP framework for Paper and Folia.
+All-in-one economy SMP plugin for Paper and Folia.
 
-Phase 1 is the framework only: no gameplay features. It gives feature modules
+Phase 1 is the framework: no gameplay features yet. It gives feature modules
 storage, currency access, a packet driven GUI, HUD widgets, placeholders and a
 command tree, so later phases are wiring rather than infrastructure.
 
-- **Minecraft** 1.21.11, 26.1.2, 26.2 (one jar, Java 21 bytecode)
-- **Server** Paper and Folia
-- **Main class** `sealmc.swe3tie.sealcore.SealCore`
-- **Economy** ExcellentEconomy, bound reflectively so it is not a build dependency
-- **Packets** PacketEvents, shaded and relocated
-- **Storage** SQLite by default, MySQL optional, plain JDBC over HikariCP
+| | |
+| --- | --- |
+| **Minecraft** | 1.21.11, 26.1.2, 26.2 |
+| **Server** | Paper and Folia, one jar for all of them |
+| **Java** | 21 bytecode, runs on any supported server |
+| **Main class** | `sealmc.swe3tie.sealcore.SealCore` |
+| **Economy** | ExcellentEconomy, bound reflectively, not a build dependency |
+| **Packets** | PacketEvents, shaded and relocated |
+| **Storage** | SQLite by default, MySQL optional, JDBC over HikariCP |
+
+> **Status: framework complete, no gameplay modules yet.**
 
 ## Build
 
@@ -22,11 +27,42 @@ The shipped jar still targets Java 21, so one artifact runs on every line.
 ./gradlew :sealcore:build
 ```
 
-Output: `sealcore/build/libs/SealCore-<version>.jar`.
+Artifacts are named after the commit they came from, so a jar on a disk is
+always traceable to a branch and a commit:
 
-`./gradlew :sealcore:build` also runs the cross version gate, see below.
+```
+sealcore/build/libs/SealCore-0.1.0-SNAPSHOT-main-a1b2c3d.jar
+```
+
+The plugin reports the same thing at runtime, so `/sealcore version` prints
+`0.1.0-SNAPSHOT+main.a1b2c3d`. Outside a git checkout the build falls back to
+`nogit` rather than inventing provenance. `./gradlew :sealcore:printVersion`
+prints the label without building.
+
 Database drivers and HikariCP are resolved by the server from the `libraries:`
 block in `plugin.yml` instead of being shaded, which keeps the jar at ~7.7 MB.
+`./gradlew :sealcore:build` also runs the cross version gate, see below.
+
+## Installing
+
+Drop the jar in `plugins/` and start the server. The plugin creates its own
+configuration on first run:
+
+```
+plugins/SealCore/
+├── config.yml          engine and shared settings
+├── languages/en.yml    every player facing string
+└── modules/            one file per module, created as modules arrive
+```
+
+**ExcellentEconomy is optional.** Without it the plugin still starts and
+everything works except currency, which reports a clear "no provider" message
+instead of failing. To use it, install ExcellentEconomy too; the mapping between
+SealCore currency keys and its currency ids lives in `config.yml`.
+
+**Do not install the standalone PacketEvents plugin as well.** SealCore embeds
+its own relocated copy and two injectors on the same channels break connections.
+SealCore logs a warning if it finds the standalone one.
 
 ## Layout
 
