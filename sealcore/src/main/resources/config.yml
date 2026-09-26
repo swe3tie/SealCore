@@ -1,0 +1,62 @@
+# SealCore - all-in-one economy SMP framework.
+#
+# This file holds only what two or more modules share, plus the engine switches.
+# Anything a single module reads lives in that module's own file under
+# modules/, and every player facing string lives under languages/.
+#
+# Every value below is the built-in default; delete a key to fall back to it.
+
+# Language file to use, under languages/. en.yml is the fallback for every
+# other language, so a partial translation shows English rather than blanks.
+lang: en.yml
+
+general:
+  # How often open packet GUIs and HUD widgets refresh, in ticks.
+  # Restart only: a reload reports it instead of applying it.
+  refresh-interval-ticks: 20
+
+economy:
+  # SealCore currency keys mapped onto ExcellentEconomy currency ids.
+  currencies:
+    money: money
+    shards: shards
+    coins: coins
+  # Which currency is used when a feature does not name one.
+  default-currency: money
+  # Refuse to enable without ExcellentEconomy instead of disabling currency
+  # features. Useful in production so a missing dependency fails loudly.
+  required: false
+
+storage:
+  # sqlite or mysql. Restart only.
+  type: sqlite
+  file-name: sealcore.db
+  host: localhost
+  port: 3306
+  database: sealcore
+  username: root
+  password: ''
+  use-ssl: false
+  pool-size: 10
+  connection-timeout-ms: 10000
+
+gui:
+  # Packet driven menus. Disable to run without PacketEvents. Restart only.
+  enabled: true
+  rows: 6
+  animation-ticks: 0
+  async-click-handling: true
+
+hud:
+  # Restart only.
+  enabled: true
+  update-interval-ticks: 20
+  sidebar:
+    enabled: false
+    title: '<gradient:#00c6ff:#0072ff><bold>SealCore</bold></gradient>'
+  bossbar:
+    enabled: false
+    title: '<white>Welcome back!'
+
+# Verbose framework logging.
+debug: false

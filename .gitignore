@@ -1,0 +1,29 @@
+# Build output
+build/
+.gradle/
+.kotlin/
+
+# Git metadata kept outside .git on some setups
+.git-sealcore/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+bin/
+out/
+
+# Local test servers and scratch
+temp/
+*.db
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini

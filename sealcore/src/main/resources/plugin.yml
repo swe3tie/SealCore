@@ -1,0 +1,41 @@
+name: SealCore
+# Expanded by the build to <version>+<branch>.<commit>, so the server reports
+# exactly which commit is running.
+version: '${version}'
+main: sealmc.swe3tie.sealcore.SealCore
+api-version: '1.21'
+description: All-in-one economy SMP framework for Paper and Folia.
+author: sealmc.swe3tie
+folia-supported: true
+load: STARTUP
+
+# Resolved by the server at boot, so the jar stays small.
+libraries:
+  - com.zaxxer:HikariCP:7.1.0
+  - org.xerial:sqlite-jdbc:3.53.4.0
+  - com.mysql:mysql-connector-j:26.7.0
+
+softdepend:
+  - ExcellentEconomy
+  - PlaceholderAPI
+
+commands:
+  sealcore:
+    description: SealCore framework commands.
+    usage: /sealcore <version|reload|debug>
+    aliases: [sc]
+    permission: sealcore.command
+
+permissions:
+  sealcore.command:
+    description: Access to /sealcore.
+    default: op
+  sealcore.command.version:
+    description: Show the loaded version.
+    default: op
+  sealcore.command.reload:
+    description: Reload the configuration.
+    default: op
+  sealcore.command.debug:
+    description: Print framework state.
+    default: op

@@ -1,0 +1,35 @@
+# SealCore - English.
+#
+# Every player facing string, one file per language. The active file is named by
+# `lang` in config.yml, for example `lang: en.yml`.
+#
+# Keys are namespaced by module id, so `jobs.miner.payout-received` belongs to
+# the module `jobs.miner`. A key missing here falls back to the key itself, and
+# a key missing from the active language falls back to this file.
+
+prefix: '<gradient:#00c6ff:#0072ff><bold>SealCore</bold></gradient> <dark_gray>»<gray> '
+
+core:
+  no-permission: '<red>You do not have permission to do that.'
+  player-only: '<red>This command can only be used in game.'
+  reloaded: '<green>SealCore reloaded.'
+  reload-partial: '<yellow>SealCore reloaded with problems: <white><details></white>'
+  storage-unavailable: '<red>SealCore storage is unavailable; some features are disabled.'
+  restart-required: '<yellow><white><key></white> changed and applies on the next restart.'
+
+economy:
+  provider-absent: '<red>No economy provider is loaded, so balances cannot be read.'
+  unknown-currency: '<red>Unknown currency: <white><currency></white>.'
+  insufficient-funds: '<red>You need <white><amount></white> but only have <white><balance></white>.'
+  success: '<green><amount></green> added to your <white><currency></white> balance.'
+  invalid-amount: '<red>That amount is not valid.'
+
+gui:
+  closed: ''
+  back: '<gray>Back'
+  previous-page: '<yellow>« Previous page'
+  next-page: '<yellow>Next page »'
+
+command:
+  usage: '<gray>Usage: <white><usage>'
+  unknown-subcommand: '<red>Unknown subcommand: <white><input></white>.'
