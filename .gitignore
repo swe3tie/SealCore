@@ -3,7 +3,7 @@ build/
 .gradle/
 .kotlin/
 
-# Git metadata kept outside .git on some setups
+# Local git metadata, used when .git is unavailable (see docs/GIT.md)
 .git-sealcore/
 
 # IDE

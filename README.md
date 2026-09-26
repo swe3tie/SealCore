@@ -241,6 +241,13 @@ region schedulers, storage and commands, is unchanged.
 `build/smoke/harness.py` reruns the matrix. It needs network the first time to
 download each server; afterwards it runs from the cached jars.
 
+## Contributing
+
+`docs/GIT.md` covers the repository layout, the commit identity and the remote.
+Build with `./gradlew :sealcore:build`; it runs the test suite and the cross
+version gate, so a change that breaks an API on any supported Minecraft line
+fails before review.
+
 ## Phases
 
 1. Framework: this module, no gameplay features.
