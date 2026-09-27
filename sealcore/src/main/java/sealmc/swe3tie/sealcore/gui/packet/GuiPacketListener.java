@@ -10,6 +10,8 @@ import sealmc.swe3tie.sealcore.gui.ClickInfo;
 import sealmc.swe3tie.sealcore.gui.GuiManager;
 import sealmc.swe3tie.sealcore.gui.GuiSession;
 
+import java.util.UUID;
+
 /**
  * Turns client container packets into screen actions.
  *
@@ -27,22 +29,44 @@ public final class GuiPacketListener implements PacketListener {
 
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
-        // ProtocolPacketEvent exposes the platform player through a generic
-        // getter, so it is resolved by uuid instead: same player, no unchecked
-        // cast and no dependency on the server implementation.
-        Player player = Bukkit.getPlayer(event.getUser().getUUID());
-        if (player == null) {
-            return;
-        }
+        // Matched before anything else, so the common case of a packet this
+        // listener has no interest in costs one instanceof and nothing else.
         Object packet = event.getLastUsedWrapper();
         if (packet instanceof WrapperPlayClientClickWindow click) {
-            handleClick(event, player, click);
+            Player player = playerOf(event);
+            if (player != null) {
+                handleClick(event, player, click);
+            }
         } else if (packet instanceof WrapperPlayClientCloseWindow) {
-            manager.handleClientClose(player);
+            Player player = playerOf(event);
+            if (player != null) {
+                manager.handleClientClose(player);
+            }
         }
     }
 
+    /**
+     * The player behind a client packet, or null when there is not one yet.
+     *
+     * <p>ProtocolPacketEvent exposes the platform player through a generic
+     * getter, so it is resolved by uuid instead: same player, no unchecked cast
+     * and no dependency on the server implementation. That uuid is null on a
+     * connection that has not logged in yet, such as a legacy server list ping,
+     * and Bukkit.getPlayer rejects a null uuid outright rather than answering
+     * null, so it has to be checked here.
+     */
+    private static Player playerOf(PacketReceiveEvent event) {
+        UUID id = event.getUser().getUUID();
+        if (id == null) {
+            return null;
+        }
+        return Bukkit.getPlayer(id);
+    }
+
     private void handleClick(PacketReceiveEvent event, Player player, WrapperPlayClientClickWindow packet) {
+        // Clicks are always cancelled while a screen is open, otherwise the
+        // client would happily move items around in a container the server
+        // knows nothing about and the two sides would drift apart.
         GuiSession session = manager.session(player);
         if (session == null || packet.getWindowId() != session.windowId()) {
             return;

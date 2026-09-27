@@ -52,7 +52,7 @@ public final class BalanceCommand {
         if (name == null) {
             var player = ctx.player();
             if (player == null) {
-                reply(ctx, "command.usage", "usage", "/balance <player>");
+                reply(ctx, "command.usage", "usage", "/balance [player]");
                 return;
             }
             offThread(ctx, () -> {

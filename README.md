@@ -128,6 +128,23 @@ of the standard tags SealCore adds `<accent>`, which resolves to
 one value and every language file follows; a value that is not a hex colour is
 reported and the last good colour stays.
 
+**Values go in braces, formatting goes in angle brackets.** Angle brackets
+belong to MiniMessage, so a value written `<player>` used to be read as a tag
+and could be swallowed whole by a colour name. Write `{player}` instead:
+
+```
+balance-other: '<accent>{player} <white>có <green>{money}'
+```
+
+A value is inserted unparsed, so a player called `white` prints as `white` and
+cannot recolour the message, and a name containing `<red>` prints literally. A
+language file still using the old `<player>` form keeps working, so a file
+translated before the change does not blank out on upgrade.
+
+**There is no prefix.** Messages are written to be read in place, the way a
+payment receipt reads, and nothing is prepended to a player's chat. The dead
+`prefix:` key is gone from every language file.
+
 **Money is formatted by SealCore.** `modules/economy.yml` owns the symbol, the
 decimals and the `K/M/B/T/Qa/Qi` suffixes, so `$89.89M` reads the same on every
 server no matter how the currency is configured inside ExcellentEconomy.
@@ -147,11 +164,28 @@ ExcellentEconomy, so it compiles and runs without it. At boot
 falls back to a no-op provider when the plugin is absent. The reflective
 contract is pinned by test stand-ins declared in the test source set at the
 upstream package and type names, so an upstream rename fails the build instead
-of a live server. `excellenteconomy-fork` additionally checks the real
-`ExcellentEconomyAPI` signatures, so a re-boxing of the amount parameter from
-`double` to `Double` fails the build too. That distinction matters: the API
-takes a primitive `double`, and looking it up as `Double` throws
-`NoSuchMethodException` and silently drops SealCore to its no-op provider.
+of a live server. The amount parameter is declared as a primitive `double`
+everywhere, and looking it up as `Double` throws `NoSuchMethodException` and
+silently drops SealCore to its no-op provider, so the stand-ins box nothing.
+The fork module has no test that reads the real `ExcellentEconomyAPI`, so a
+re-boxing on the EE side is caught by the live check in `excellenteconomy-fork/FORK.md`,
+not by the build.
+
+**SealCore owns /balance and /pay, including their messages.** ExcellentEconomy
+is a paper plugin, so it loads and enables before any Bukkit plugin and its
+commands answer first, and a Bukkit plugin cannot take a name back afterwards:
+the server builds its command tree as plugins load. The fork therefore declines
+to register any command name that another installed plugin declares in its own
+descriptor, and logs which plugin it yielded to. Because that is a declaration
+rather than a claim, it does not depend on load order.
+
+Withholding the command is not enough on its own, because ExcellentEconomy
+also notifies from inside the API. Its default operation context tells the
+player about every balance change, so one `/pay` printed ExcellentEconomy's
+"$100 has been taken from your account!" directly above SealCore's own message.
+SealCore builds its operation context with the two chat targets silenced and the
+two loggers left on, so a payment is announced once and still recorded in
+ExcellentEconomy's operation log.
 
 **Upstream ExcellentEconomy is Paper 26.1.2 only.** For Folia, or for 26.2,
 use the jar from `excellenteconomy-fork`, which is EE 2.8.0 with the Folia flag

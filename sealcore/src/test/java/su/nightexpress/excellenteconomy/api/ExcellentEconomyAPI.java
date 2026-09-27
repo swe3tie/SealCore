@@ -6,6 +6,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import su.nightexpress.excellenteconomy.api.currency.ExcellentCurrency;
+import su.nightexpress.excellenteconomy.api.currency.operation.OperationContext;
 import su.nightexpress.excellenteconomy.api.currency.operation.OperationResult;
 
 /**
@@ -39,11 +40,21 @@ public interface ExcellentEconomyAPI {
 
     CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, double amount);
 
-    CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, double amount, Object context);
+    CompletableFuture<OperationResult> depositAsync(
+        UUID playerId,
+        String currencyName,
+        double amount,
+        OperationContext context
+    );
 
     CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, double amount);
 
-    CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, double amount, Object context);
+    CompletableFuture<OperationResult> withdrawAsync(
+        UUID playerId,
+        String currencyId,
+        double amount,
+        OperationContext context
+    );
 
     /** In-memory backing store so the tests can assert real balances. */
     final class Fake implements ExcellentEconomyAPI {
@@ -51,6 +62,10 @@ public interface ExcellentEconomyAPI {
         public final Map<BalanceKey, Double> balances = new java.util.HashMap<>();
         public final java.util.ArrayList<String> calls = new java.util.ArrayList<>();
         public boolean failEverything;
+        /** Deposits to this player fail, so a transfer's receiving half breaks. */
+        public UUID failDepositsFor;
+        /** The context the bridge passed with the last call, to inspect its notifications. */
+        public OperationContext lastContext;
 
         @Override
         public boolean hasCurrency(String id) {
@@ -83,7 +98,7 @@ public interface ExcellentEconomyAPI {
             UUID playerId,
             String currencyName,
             double amount,
-            Object context
+            OperationContext context
         ) {
             return apply(playerId, currencyName, amount, "deposit", context);
         }
@@ -98,29 +113,38 @@ public interface ExcellentEconomyAPI {
             UUID playerId,
             String currencyId,
             double amount,
-            Object context
+            OperationContext context
         ) {
             return apply(playerId, currencyId, amount, "withdraw", context);
         }
 
+        /**
+         * Mirrors ExcellentEconomy's CurrencyManager.remove, which subtracts the amount
+         * and reports success without ever checking whether the player can afford it.
+         *
+         * <p>This stand-in used to refuse an overdraw, which is not what the real API
+         * does, and every balance check in SealCore therefore looked like it worked.
+         * A stand-in that is more forgiving than the real thing is worse than none at
+         * all, so the real behaviour is reproduced here and the checks are tested
+         * against it.
+         */
         private CompletableFuture<OperationResult> apply(
             UUID playerId,
             String currencyId,
             double amount,
             String operation,
-            Object context
+            OperationContext context
         ) {
             calls.add(operation + " " + currencyId + " " + amount + " context=" + (context != null));
-            if (failEverything) {
+            if (context != null) {
+                lastContext = context;
+            }
+            if (failEverything || (operation.equals("deposit") && playerId.equals(failDepositsFor))) {
                 return CompletableFuture.completedFuture(OperationResult.FAILURE);
             }
             BalanceKey key = new BalanceKey(playerId, currencyId);
             double current = balances.getOrDefault(key, 0.0);
-            double next = operation.equals("withdraw") ? current - amount : current + amount;
-            if (next < 0) {
-                return CompletableFuture.completedFuture(OperationResult.FAILURE);
-            }
-            balances.put(key, next);
+            balances.put(key, operation.equals("withdraw") ? current - amount : current + amount);
             return CompletableFuture.completedFuture(OperationResult.SUCCESS);
         }
     }

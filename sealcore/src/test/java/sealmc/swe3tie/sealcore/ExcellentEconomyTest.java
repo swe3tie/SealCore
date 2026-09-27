@@ -20,6 +20,7 @@ import sealmc.swe3tie.sealcore.economy.provider.ExcellentEconomyProvider;
 import sealmc.swe3tie.sealcore.economy.provider.NoopEconomyProvider;
 import sealmc.swe3tie.sealcore.util.Async;
 import su.nightexpress.excellenteconomy.api.ExcellentEconomyAPI;
+import su.nightexpress.excellenteconomy.api.currency.operation.NotificationTarget;
 
 /**
  * Exercises the reflective bridge against a stand-in that declares the same package,
@@ -110,12 +111,111 @@ class ExcellentEconomyTest {
         assertEquals(0.0, Async.await(provider.balance(bob, CurrencyKey.MONEY)));
     }
 
+    /**
+     * The stand-in now behaves like the real API and lets a balance go negative, so
+     * the provider has to be the one that refuses. This is the regression that let
+     * /pay hand out money nobody had.
+     */
     @Test
-    void operationContextIsPassedWhenTheClassesArePresent() {
+    void transferRefusesToOverdrawAndMintsNothing() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 25.0, "test"));
+        var result = Async.await(provider.transfer(alice, bob, CurrencyKey.MONEY, 60.0, "pay"));
+        assertTrue(result instanceof EconomyResult.Failure);
+        assertEquals(EconomyResult.Reason.INSUFFICIENT_FUNDS, result.reason());
+        assertEquals(25.0, Async.await(provider.balance(alice, CurrencyKey.MONEY)));
+        assertEquals(0.0, Async.await(provider.balance(bob, CurrencyKey.MONEY)));
+    }
+
+    @Test
+    void withdrawingMoreThanTheBalanceIsRefusedAndLeavesTheBalance() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 12.0, "test"));
+        var result = Async.await(provider.withdraw(alice, CurrencyKey.MONEY, 50.0, "test"));
+        assertTrue(result instanceof EconomyResult.Failure);
+        assertEquals(EconomyResult.Reason.INSUFFICIENT_FUNDS, result.reason());
+        assertEquals(12.0, Async.await(provider.balance(alice, CurrencyKey.MONEY)));
+    }
+
+    @Test
+    void payingExactlyTheBalanceIsAllowed() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 25.0, "test"));
+        assertTrue(Async.await(provider.transfer(alice, bob, CurrencyKey.MONEY, 25.0, "pay")).isSuccess());
+        assertEquals(0.0, Async.await(provider.balance(alice, CurrencyKey.MONEY)));
+        assertEquals(25.0, Async.await(provider.balance(bob, CurrencyKey.MONEY)));
+    }
+
+    /**
+     * Two payments that each fit on their own must not both pass the balance check.
+     * Without the per player queue both read 100, both withdraw 80, and the server
+     * creates 60 out of nothing.
+     */
+    @Test
+    void concurrentPaymentsCannotBothSpendTheSameBalance() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 100.0, "test"));
+
+        var first = provider.transfer(alice, bob, CurrencyKey.MONEY, 80.0, "pay");
+        var second = provider.transfer(alice, bob, CurrencyKey.MONEY, 80.0, "pay");
+        var results = List.of(Async.await(first), Async.await(second));
+
+        assertEquals(1, results.stream().filter(EconomyResult::isSuccess).count(),
+            "exactly one of the two payments should have gone through: " + results);
+        assertEquals(20.0, Async.await(provider.balance(alice, CurrencyKey.MONEY)));
+        assertEquals(80.0, Async.await(provider.balance(bob, CurrencyKey.MONEY)));
+    }
+
+    /**
+     * A transfer whose deposit half fails has to hand the money back by depositing it.
+     * Withdrawing again, which is what this used to do, charged the sender twice.
+     */
+    @Test
+    void failedDepositGivesTheSenderTheirMoneyBackOnce() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 100.0, "test"));
+        fake.failDepositsFor = bob;
+        var result = Async.await(provider.transfer(alice, bob, CurrencyKey.MONEY, 40.0, "pay"));
+        fake.failDepositsFor = null;
+
+        assertTrue(result instanceof EconomyResult.Failure);
+        assertEquals(100.0, Async.await(provider.balance(alice, CurrencyKey.MONEY)),
+            "the sender is paid once and refunded once, so they end where they started");
+        assertEquals(0.0, Async.await(provider.balance(bob, CurrencyKey.MONEY)));
+    }
+
+    @Test
+    void aTransactionCarriesAnOperationContext() {
         Async.await(provider.deposit(alice, CurrencyKey.MONEY, 1.0, "shop"));
-        // The stand-in does not declare OperationContext, so the bridge must fall
-        // back to the three argument overload instead of failing.
-        assertTrue(fake.calls.stream().anyMatch(call -> call.contains("context=false")));
+        // Falls back to the three argument overload only if the context classes
+        // are missing, which would cost the transaction its name in the log.
+        assertTrue(fake.calls.stream().anyMatch(call -> call.contains("context=true")));
+        assertNotNull(fake.lastContext);
+        assertEquals("shop", fake.lastContext.getExecutor().getName());
+    }
+
+    @Test
+    void excellentEconomyStaysQuietInChatButKeepsTheOperationLog() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 100.0, "test"));
+        Async.await(provider.transfer(alice, bob, CurrencyKey.MONEY, 1.0, "pay"));
+
+        // The default context notifies the player, so every /pay used to print
+        // ExcellentEconomy's "1 has been taken from your account!" right above
+        // SealCore's own message.
+        assertNotNull(fake.lastContext);
+        assertFalse(fake.lastContext.shouldNotify(NotificationTarget.USER));
+        assertFalse(fake.lastContext.shouldNotify(NotificationTarget.EXECUTOR));
+
+        // The loggers are a different target and must survive the silencing.
+        assertTrue(fake.lastContext.shouldNotify(NotificationTarget.FILE_LOGGER));
+        assertTrue(fake.lastContext.shouldNotify(NotificationTarget.CONSOLE_LOGGER));
+    }
+
+    @Test
+    void aPaymentCarriesAContextOnBothHalves() {
+        Async.await(provider.deposit(alice, CurrencyKey.MONEY, 100.0, "test"));
+        fake.calls.clear();
+        assertTrue(Async.await(provider.transfer(alice, bob, CurrencyKey.MONEY, 30.0, "pay")).isSuccess());
+
+        // The withdrawal and the deposit both went through, so both carried a
+        // context rather than one traced half and one anonymous one.
+        assertEquals(2, fake.calls.stream().filter(call -> call.contains("context=true")).count());
+        assertFalse(fake.calls.stream().anyMatch(call -> call.contains("context=false")));
     }
 
     @Test

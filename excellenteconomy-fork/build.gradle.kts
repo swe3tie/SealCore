@@ -21,7 +21,7 @@ plugins {
 // Distinct from upstream 2.8.0 so an operator can never mistake a jar of this
 // fork for the original on a server that already has one.
 group = "sealmc.swe3tie"
-version = "2.8.0-sealcore.1"
+version = "2.8.0-sealcore.2"
 
 base {
     archivesName.set("ExcellentEconomy")

@@ -1,7 +1,10 @@
 package sealmc.swe3tie.sealcore;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.logging.Level;
+import org.bukkit.command.PluginCommand;
+import org.bukkit.command.PluginIdentifiableCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import sealmc.swe3tie.sealcore.command.SealCommandAdapter;
 import sealmc.swe3tie.sealcore.command.SealCoreCommand;
@@ -263,6 +266,30 @@ public final class SealCore extends JavaPlugin {
                 var adapter = new SealCommandAdapter(sealCommand, context, getLogger());
                 bound.setExecutor(adapter);
                 bound.setTabCompleter(adapter);
+                reportShadowed(bound);
+            }
+        }
+    }
+
+    /**
+     * Warns when another plugin answers to one of this plugin's names.
+     *
+     * <p>A name declared in {@code plugin.yml} is registered while the plugin loads,
+     * and a plugin that registers later can take it. The server builds its command
+     * tree at that point, so the loser cannot get the name back by writing the
+     * command map afterwards; the name has to be left alone by the other plugin, and
+     * the fork of that plugin is what does it. All that is left to do here is say so,
+     * because otherwise a command that silently answers from somewhere else looks
+     * like a bug in this plugin.
+     */
+    private void reportShadowed(PluginCommand command) {
+        var known = getServer().getCommandMap().getKnownCommands();
+        for (String name : new String[] {command.getName()}) {
+            var owner = known.get(name.toLowerCase(java.util.Locale.ROOT));
+            if (owner instanceof PluginIdentifiableCommand held && held.getPlugin() != this) {
+                getLogger().warning("The /" + name + " command is answered by " + held.getPlugin().getName()
+                    + ", not by SealCore. SealCore is the intended owner; remove that plugin's"
+                    + " command declaration or the name will not come back.");
             }
         }
     }

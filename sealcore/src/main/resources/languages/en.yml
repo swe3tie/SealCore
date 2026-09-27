@@ -8,38 +8,39 @@
 # a key missing from the active language falls back to this file.
 #
 # MiniMessage: <accent> is the SealCore accent colour, set in config.yml.
-
-prefix: '<gradient:#00c6ff:#0072ff><bold>SealCore</bold></gradient> <dark_gray>»<gray> '
+# Angle brackets are MiniMessage tags, so a value goes in braces: {player},
+# {money}. A value is never parsed as markup, so a player called "white" cannot
+# recolour a message.
 
 core:
   no-permission: '<red>You do not have permission to do that.'
   player-only: '<red>This command can only be used in game.'
-  module-disabled: '<red>Module <white><module></white> is disabled.'
+  module-disabled: '<red>Module <white>{module}</white> is disabled.'
   reloaded: '<green>SealCore reloaded.'
-  reload-partial: '<yellow>SealCore reloaded with problems: <white><details></white>'
+  reload-partial: '<yellow>SealCore reloaded with problems: <white>{details}</white>'
   storage-unavailable: '<red>SealCore storage is unavailable; some features are disabled.'
-  restart-required: '<yellow><white><key></white> changed and applies on the next restart.'
+  restart-required: '<yellow><white>{key}</white> changed and applies on the next restart.'
 
 economy:
   # /balance
-  balance-self: '<white>You have <green><money>'
-  balance-other: '<accent><player> <white>has <green><money>'
+  balance-self: '<white>You have <green>{money}'
+  balance-other: '<accent>{player} <white>has <green>{money}'
   # /pay, sender
-  pay-sent-chat: '<white>You sent <green><money> <white>to <accent><player>'
-  pay-sent-actionbar: '<white>Sent <green><money> <white>to <accent><player>'
+  pay-sent-chat: '<white>You sent <green>{money} <white>to <accent>{player}'
+  pay-sent-actionbar: '<white>Sent <green>{money} <white>to <accent>{player}'
   # /pay, receiver
-  pay-received-chat: '<accent><player> <white>sent you <green><money>'
-  pay-received-actionbar: '<accent><player>sent you <green><money>'
+  pay-received-chat: '<accent>{player} <white>sent you <green>{money}'
+  pay-received-actionbar: '<accent>{player}sent you <green>{money}'
   # /pay, errors
   pay-self: '<red>You cannot pay yourself.'
-  pay-amount-range: '<red>The amount must be between <white><min></white> and <white><max></white>.'
-  pay-cooldown: '<red>Wait <white><seconds> seconds</white> before paying again.'
+  pay-amount-range: '<red>The amount must be between <white>{min}</white> and <white>{max}</white>.'
+  pay-cooldown: '<red>Wait <white>{seconds} seconds</white> before paying again.'
   pay-failed: '<red>The transfer failed, please try again.'
-  player-not-found: '<red>Player <white><player></white> was not found.'
+  player-not-found: '<red>Player <white>{player}</white> was not found.'
   # Shared
   provider-absent: '<red>No economy provider is loaded, so balances cannot be read.'
-  unknown-currency: '<red>Unknown currency: <white><currency></white>.'
-  insufficient-funds: '<red>You need <white><amount></white> but only have <white><balance></white>.'
+  unknown-currency: '<red>Unknown currency: <white>{currency}</white>.'
+  insufficient-funds: '<red>You need <white>{amount}</white> but only have <white>{balance}</white>.'
   invalid-amount: '<red>That amount is not valid.'
 
 gui:
@@ -49,5 +50,5 @@ gui:
   next-page: '<yellow>Next page »'
 
 command:
-  usage: '<gray>Usage: <white><usage>'
-  unknown-subcommand: '<red>Unknown subcommand: <white><input></white>.'
+  usage: '<gray>Usage: <white>{usage}'
+  unknown-subcommand: '<red>Unknown subcommand: <white>{input}</white>.'

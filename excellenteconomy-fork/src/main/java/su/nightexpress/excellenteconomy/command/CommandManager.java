@@ -1,5 +1,7 @@
 package su.nightexpress.excellenteconomy.command;
 
+import org.bukkit.plugin.Plugin;
+import org.bukkit.plugin.PluginDescriptionFile;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.NonNull;
 import org.jspecify.annotations.Nullable;
@@ -25,8 +27,12 @@ import su.nightexpress.nightcore.manager.SimpleManager;
 import su.nightexpress.nightcore.util.LowerCase;
 import su.nightexpress.nightcore.util.placeholder.PlaceholderContext;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -137,10 +143,12 @@ public class CommandManager extends SimpleManager<EconomyPlugin> {
         this.rootCommand = NightCommand.forPlugin(this.plugin, root -> {
             root.branch(this.childrens.toArray(new ExecutableNode[0]));
         });
+        if (!this.claimable(this.rootCommand)) return;
         this.rootCommand.register();
     }
 
     public void registerStandaloneCommands() {
+        this.standalones.removeIf(command -> !this.claimable(command));
         this.standalones.forEach(NightCommand::register);
     }
 
@@ -184,8 +192,94 @@ public class CommandManager extends SimpleManager<EconomyPlugin> {
     }
 
     public boolean registerCurrencyCommand(@NonNull ExcellentCurrency currency, @NonNull NightCommand command) {
+        if (!this.claimable(command)) return false;
         return command.register() && this.currencyCommandMap.computeIfAbsent(currency.getId(), k -> new HashSet<>())
             .add(command);
+    }
+
+    /**
+     * Whether this plugin may register a command under these names.
+     *
+     * <p>Upstream registers straight into the command map, which overwrites whatever
+     * is already there, and a plugin cannot get a name back afterwards: the server
+     * builds its command tree as plugins load, so whichever registered first is the
+     * one that answers, and rewriting the map later changes nothing. So the name is
+     * left alone instead of taken.
+     *
+     * <p>The comparison is against what other plugins <em>declare</em> in their own
+     * descriptor rather than against who currently holds the name, and that is what
+     * makes it independent of load order. A plugin that lists {@code pay} in its
+     * plugin.yml meant it, whether or not it has registered yet. A bukkit plugin is
+     * loaded before this paper plugin enables, so the declarations are all already
+     * readable here.
+     */
+    private boolean claimable(@NotNull NightCommand command) {
+        Map<String, String> declared = this.declaredElsewhere();
+
+        // Bukkit's Command takes the first label as the name and everything after it
+        // as aliases, so a command declared only as ["pay"] has an empty alias list
+        // and a check on the aliases alone would not see it at all.
+        Map<String, String> conflicts = new LinkedHashMap<>();
+        this.addIfDeclaredElsewhere(conflicts, declared, command.getName());
+        for (String alias : command.getAliases()) {
+            this.addIfDeclaredElsewhere(conflicts, declared, alias);
+        }
+        if (conflicts.isEmpty()) return true;
+
+        List<String> owners = new ArrayList<>(conflicts.size());
+        conflicts.forEach((name, owner) -> owners.add("'" + name + "' to " + owner));
+        this.plugin.warn("Leaving " + String.join(" and ", owners) + ". That plugin is installed and"
+            + " declares the name, so this plugin's own version of that command is not registered."
+            + " Move money through the other plugin instead.");
+        return false;
+    }
+
+    private void addIfDeclaredElsewhere(@NonNull Map<String, String> conflicts,
+                                        @NonNull Map<String, String> declared, @NotNull String name) {
+        String lower = name.toLowerCase(Locale.ROOT);
+        if (declared.containsKey(lower)) {
+            conflicts.putIfAbsent(lower, declared.get(lower));
+        }
+    }
+
+    /**
+     * Every command name and alias another installed plugin declares in its own
+     * descriptor, mapped to the plugin that declared it.
+     *
+     * <p>Read fresh on each call rather than cached. It costs a few hundred string
+     * comparisons and runs only while commands are being registered, and not
+     * caching means a plugin that loads part way through cannot be missed.
+     */
+    private Map<String, String> declaredElsewhere() {
+        Map<String, String> declared = new HashMap<>();
+        for (Plugin other : this.plugin.getServer().getPluginManager().getPlugins()) {
+            if (other == this.plugin) continue;
+
+            PluginDescriptionFile meta = other.getDescription();
+            if (meta == null) continue;
+
+            String owner = meta.getName();
+            Map<String, Map<String, Object>> commands = meta.getCommands();
+            if (commands == null) continue;
+
+            commands.forEach((name, section) -> {
+                this.declare(declared, name, owner);
+                // The usual way an alias is written: a list under the command it
+                // belongs to. The old top level commandAliases key is not exposed
+                // by the API on any of the supported versions, so it is not read.
+                Object aliases = section == null ? null : section.get("aliases");
+                if (aliases instanceof Iterable<?> list) {
+                    list.forEach(alias -> this.declare(declared, String.valueOf(alias), owner));
+                }
+            });
+        }
+        return declared;
+    }
+
+    private void declare(@NonNull Map<String, String> declared, @Nullable String name, @NotNull String owner) {
+        if (name != null && !name.isEmpty()) {
+            declared.putIfAbsent(name.toLowerCase(Locale.ROOT), owner);
+        }
     }
 
     public void unregisterCommands() {

@@ -356,7 +356,7 @@ class EconomyModuleTest {
 
         run(balanceNode(context()), console.asSender());
 
-        assertEquals(List.of("Cách dùng: /balance <player>"), console.plain());
+        assertEquals(List.of("Cách dùng: /balance [player]"), console.plain());
     }
 
     // --- /pay ----------------------------------------------------------------

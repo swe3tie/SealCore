@@ -1,6 +1,7 @@
 # ExcellentEconomy fork
 
-ExcellentEconomy 2.8.0, forked so it runs on Folia and Minecraft 26.2.
+ExcellentEconomy 2.8.0, forked so it runs on Folia and Minecraft 26.2, and
+so it hands `/balance` and `/pay` to the plugin that declares them.
 
 Upstream is <https://github.com/nulli0n/ExcellentEconomy>, GPL-3.0, and this
 fork stays GPL-3.0. `LICENSE` is upstream's, unmodified. `UPSTREAM-README.md` is
@@ -30,13 +31,14 @@ compiles against the 26.2 API with no changes, so this is a target bump.
 | NightCore | `2.15.1` | `2.16.4` |
 | `plugin.yml` | no `folia-supported` | `folia-supported: true` |
 | `paper-plugin.yml` | no `folia-supported` | `folia-supported: true` |
-| Version | `2.8.0` | `2.8.0-sealcore.1` |
+| Version | `2.8.0` | `2.8.0-sealcore.2` |
 | `maven-publish` | publishes to NightExpress's repo | removed, not published from here |
 | `CurrencyFactory` | constructs `EconomyCurrency` inline | delegates to `VaultCurrencyFactory` |
+| `CommandManager` | overwrites any command name already taken | yields a name another plugin declares |
 
-### The two source edits
+### The three source edits
 
-Everything else is dependency level, but two things in the source tree had to
+Everything else is dependency level, but three things in the source tree had to
 change as well.
 
 **1. `paper-plugin.yml` needs the Folia flag too.** Upstream ships both
@@ -63,7 +65,44 @@ keeps its public shape, so nothing else in EE had to move.
 
 The other Vault reference, `MigratorFactory`, is already safe: its only call site
 sits behind `Plugins.isInstalled(HookPlugin.VAULT)`, so it is never linked
-without Vault. The rest of `src/` is upstream's, byte for byte.
+without Vault.
+
+**3. A command name another plugin declares is left alone.** ExcellentEconomy is
+a paper plugin, so it loads and enables before any Bukkit plugin and its
+`/balance` and `/pay` answer before SealCore ever gets a chance. That is not
+recoverable from the other side: the server builds its command tree as plugins
+load, so a Bukkit plugin cannot take a name back once it has been taken, and
+rewriting the command map later changes nothing. Upstream `CommandManager`
+registers straight into that map, which silently overwrites the other owner.
+
+So the fork leaves the name alone instead of taking it. `claimable(...)`
+compares the name and every alias against what other **installed** plugins
+declare in their own `plugin.yml`, read from `PluginDescriptionFile`, and
+refuses to register on a match:
+
+```
+[ExcellentEconomy] Leaving 'balance' to SealCore and 'bal' to SealCore. That plugin
+is installed and declares the name, so this plugin's own version of that command
+is not registered. Move money through the other plugin instead.
+```
+
+The comparison is against declarations, not against who currently holds the
+name, and that is what makes it independent of load order: a plugin that lists
+`pay` in its descriptor meant it whether or not it has registered yet. Reading
+declarations rather than registrations is also why a Bukkit plugin works here at
+all — a Bukkit plugin is loaded before this paper plugin enables, so its
+`plugin.yml` is readable at this point. Note that Bukkit's `Command` takes the
+first label as the *name* and the rest as aliases, so `/pay` declared alone has
+an empty alias list; the check looks at the name as well as the aliases, or it
+would not see `/pay` at all.
+
+The old top level `commandAliases` key is not read, because no Paper API this
+fork targets exposes a getter for it. A command's own `aliases:` list, which is
+the usual way to write one, is read. Declaring the name under `commands:` and
+listing aliases there is what SealCore does.
+
+Nothing here is specific to SealCore. Any plugin that declares a conflicting
+name gets it kept.
 
 ## Installing
 
@@ -74,7 +113,7 @@ Needs **NightCore**, which this fork does not bundle:
   **2.16.6** build for Minecraft 26.2.
 - Vault, PlaceholderAPI and PlayerPoints are optional, as upstream.
 
-Drop `ExcellentEconomy-2.8.0-sealcore.1.jar` in `plugins/`. It replaces upstream
+Drop `ExcellentEconomy-2.8.0-sealcore.2.jar` in `plugins/`. It replaces upstream
 2.8.0 outright; do not run both.
 
 ## Verified
@@ -90,6 +129,23 @@ Built and booted on a real server, not just compiled:
 `Provider: ExcellentEconomy`, `Available: true`, `Currencies: money, coins`,
 which also exercises SealCore's reflective bridge against the real API.
 
+Command ownership, on Folia 26.1.2 build 8 with both plugins installed and the
+jars from this repo:
+
+| Command | Answers | Evidence |
+| --- | --- | --- |
+| `/bal`, `/balance` | SealCore | EE logs it is leaving `balance` and `bal`; both forms print SealCore's message |
+| `/balance <player>` | SealCore | prints the other player's balance in SealCore's format |
+| `/pay` | SealCore | EE logs it is leaving `pay`; a payment is announced once, by SealCore only |
+| `/pay` over balance | SealCore | refused with SealCore's message and no money moved |
+| `/money` and EE's other names | ExcellentEconomy | untouched; only declared conflicts are yielded |
+
+A single `/pay` used to produce two lines, because ExcellentEconomy notifies the
+player from inside `CurrencyManager.remove` on top of SealCore's own message. That
+is a SealCore side fix, not a fork change: the bridge builds its operation
+context with `NotificationTarget.USER` and `NotificationTarget.EXECUTOR` silenced
+and the two loggers left on. This fork only had to stop taking the command name.
+
 ## Keeping in sync with upstream
 
 ```
@@ -99,11 +155,13 @@ rsync -a --delete ExcellentEconomy/src/ excellenteconomy-fork/src/
 ```
 
 `rsync --delete` removes `VaultCurrencyFactory.java` along with the rest of
-upstream's tree, because that file is ours. Re-apply the second source edit above
-after a sync.
+upstream's tree, because that file is ours. Re-apply the second and third source
+edits above after a sync.
 
-If upstream ever declares the amount parameter as a boxed `Double`, the reflective
-contract in SealCore changes with it. `sealcore`'s
-`ExcellentEconomyApiContractTest` checks the real interface's signatures when
-this module is on the test classpath, so a rename or a re-box fails the build
-rather than a live server.
+There is no test in this module that reads the real `ExcellentEconomyAPI`. If
+upstream renames a method, re-boxes the amount parameter from `double` to
+`Double`, or changes what `OperationContext.of` does, the build stays green and
+only a live server shows it. The reflective contract is pinned on the SealCore
+side by stand-ins declared in `sealcore/src/test` at the upstream package and type
+names, which catch a mismatch against *that* copy but not against a new upstream
+release. After a sync, re-run the live check in **Verified** above.

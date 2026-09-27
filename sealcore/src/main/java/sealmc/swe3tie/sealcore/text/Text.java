@@ -17,7 +17,8 @@ import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
  * shaded into the plugin jar.
  *
  * <p>Every component SealCore shows goes through {@link #mini()}, which carries
- * the standard tag set plus {@code <accent>}.
+ * the standard tag set plus <code>&lt;accent&gt;</code>. Values are not tags:
+ * they are written <code>{name}</code> and filled in by {@link #render}.
  */
 public final class Text {
 
@@ -25,6 +26,9 @@ public final class Text {
     public static final String DEFAULT_ACCENT = "#9CC0D9";
 
     private static final PlainTextComponentSerializer PLAIN = PlainTextComponentSerializer.plainText();
+
+    /** Names for the tags a rewritten placeholder is parked under while MiniMessage parses. */
+    private static final String TAG = "sealcore-placeholder-";
 
     private static volatile TextColor accent = initialAccent();
     private static volatile MiniMessage mini = build(accent);
@@ -103,8 +107,18 @@ public final class Text {
     }
 
     /**
-     * Renders {@code template} with MiniMessage after substituting the
-     * arguments, which are alternating key and value.
+     * Renders {@code template} with MiniMessage after substituting the arguments,
+     * which are alternating key and value.
+     *
+     * <p>Placeholders are written <code>{key}</code>. MiniMessage gives angle
+     * brackets to colour and decoration, so a value called "white" or "red" used
+     * to be swallowed as a tag and leave a hole in the message; braces keep values
+     * and formatting apart. Each one is rewritten to a tag name no real tag can
+     * collide with before MiniMessage sees the string, and the value goes in
+     * unparsed, so a player name can never smuggle markup of its own in.
+     *
+     * <p>A file that still writes <code>&lt;key&gt;</code> keeps working, so a
+     * language file translated before this change does not blank out on upgrade.
      */
     public static Component render(String template, String... keyAndValue) {
         if (keyAndValue.length == 0) {
@@ -114,10 +128,20 @@ public final class Text {
             throw new IllegalArgumentException("render() needs an even number of arguments, got " + keyAndValue.length);
         }
         TagResolver.Builder builder = TagResolver.builder();
+        String rewritten = template;
         for (int i = 0; i < keyAndValue.length; i += 2) {
-            builder.resolver(Placeholder.unparsed(keyAndValue[i], keyAndValue[i + 1]));
+            String key = keyAndValue[i];
+            String token = "{" + key + "}";
+            String legacy = "<" + key + ">";
+            if (rewritten.contains(token)) {
+                String tag = TAG + (i / 2);
+                builder.resolver(Placeholder.unparsed(tag, keyAndValue[i + 1]));
+                rewritten = rewritten.replace(token, "<" + tag + ">");
+            } else if (rewritten.contains(legacy)) {
+                builder.resolver(Placeholder.unparsed(key, keyAndValue[i + 1]));
+            }
         }
-        return parse(template, builder.build());
+        return parse(rewritten, builder.build());
     }
 
     public static Component empty() {

@@ -9,38 +9,39 @@
 #
 # MiniMessage: <accent> là màu chữ đậm của SealCore, đặt trong config.yml. Đổi
 # `general.accent-color` là đổi màu ở tất cả các file ngôn ngữ.
-
-prefix: '<accent>SealCore</accent> <dark_gray>»<gray> '
+# Dấu `<>` là MiniMessage tag, nên giá trị phải nằm trong ngoặc nhọn: {player},
+# {money}. Giá trị không bao giờ được đọc như markup, nên một người chơi tên
+# "white" không thể đổi màu câu nhắn.
 
 core:
   no-permission: '<red>Bạn không có quyền làm điều đó.'
   player-only: '<red>Lệnh này chỉ chạy trong game.'
-  module-disabled: '<red>Module <white><module></white> đang tắt.'
+  module-disabled: '<red>Module <white>{module}</white> đang tắt.'
   reloaded: '<green>SealCore đã tải lại.'
-  reload-partial: '<yellow>SealCore đã tải lại có vấn đề: <white><details></white>'
+  reload-partial: '<yellow>SealCore đã tải lại có vấn đề: <white>{details}</white>'
   storage-unavailable: '<red>SealCore không truy cập được dữ liệu, một số tính năng đang bị tắt.'
-  restart-required: '<yellow><white><key></white> thay đổi và sẽ áp dụng ở lần khởi động tới.'
+  restart-required: '<yellow><white>{key}</white> thay đổi và sẽ áp dụng ở lần khởi động tới.'
 
 economy:
   # /balance
-  balance-self: '<white>Bạn có <green><money>'
-  balance-other: '<accent><player> <white>có <green><money>'
+  balance-self: '<white>Bạn có <green>{money}'
+  balance-other: '<accent>{player} <white>có <green>{money}'
   # /pay - người gửi
-  pay-sent-chat: '<white>Bạn đã gửi <green><money> <white>tới <accent><player>'
-  pay-sent-actionbar: '<white>Đã gửi <green><money> <white>tới <accent><player>'
+  pay-sent-chat: '<white>Bạn đã gửi <green>{money} <white>tới <accent>{player}'
+  pay-sent-actionbar: '<white>Đã gửi <green>{money} <white>tới <accent>{player}'
   # /pay - người nhận
-  pay-received-chat: '<accent><player> <white>đã gửi <green><money><white> tới <accent>bạn'
-  pay-received-actionbar: '<accent><player>đã gửi <green><money>'
+  pay-received-chat: '<accent>{player} <white>đã gửi <green>{money}<white> tới <accent>bạn'
+  pay-received-actionbar: '<accent>{player}đã gửi <green>{money}'
   # /pay - lỗi
   pay-self: '<red>Bạn không thể gửi tiền cho chính mình.'
-  pay-amount-range: '<red>Số tiền phải từ <white><min></white> đến <white><max></white>.'
-  pay-cooldown: '<red>Chờ <white><seconds> giây</white> rồi hãy gửi tiếp.'
+  pay-amount-range: '<red>Số tiền phải từ <white>{min}</white> đến <white>{max}</white>.'
+  pay-cooldown: '<red>Chờ <white>{seconds} giây</white> rồi hãy gửi tiếp.'
   pay-failed: '<red>Giao dịch thất bại, hãy thử lại.'
-  player-not-found: '<red>Không tìm thấy người chơi <white><player></white>.'
+  player-not-found: '<red>Không tìm thấy người chơi <white>{player}</white>.'
   # Dùng chung
   provider-absent: '<red>Chưa nạp hệ kinh tế, không đọc được số dư.'
-  unknown-currency: '<red>Không biết loại tiền: <white><currency></white>.'
-  insufficient-funds: '<red>Bạn cần <white><amount></white> nhưng chỉ có <white><balance></white>.'
+  unknown-currency: '<red>Không biết loại tiền: <white>{currency}</white>.'
+  insufficient-funds: '<red>Bạn cần <white>{amount}</white> nhưng chỉ có <white>{balance}</white>.'
   invalid-amount: '<red>Số tiền không hợp lệ.'
 
 gui:
@@ -50,5 +51,5 @@ gui:
   next-page: '<yellow>Trang sau »'
 
 command:
-  usage: '<gray>Cách dùng: <white><usage>'
-  unknown-subcommand: '<red>Không biết lệnh con: <white><input></white>.'
+  usage: '<gray>Cách dùng: <white>{usage}'
+  unknown-subcommand: '<red>Không biết lệnh con: <white>{input}</white>.'

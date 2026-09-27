@@ -31,6 +31,7 @@ public final class ExcellentEconomyBridge {
     private static final String CURRENCY_CLASS = "su.nightexpress.excellenteconomy.api.currency.ExcellentCurrency";
     private static final String CONTEXT_CLASS = "su.nightexpress.excellenteconomy.api.currency.operation.OperationContext";
     private static final String EXECUTOR_CLASS = "su.nightexpress.excellenteconomy.api.currency.operation.OperationExecutor";
+    private static final String NOTIFICATION_CLASS = "su.nightexpress.excellenteconomy.api.currency.operation.NotificationTarget";
     private static final String RESULT_CLASS = "su.nightexpress.excellenteconomy.api.currency.operation.OperationResult";
 
     private static final Object FAILURE_SENTINEL = new Object();
@@ -38,6 +39,7 @@ public final class ExcellentEconomyBridge {
     private final Object apiInstance;
     private final Class<?> operationContext;
     private final Class<?> operationExecutor;
+    private final Class<?> notificationTarget;
     private final Object successResult;
     private final Logger logger;
 
@@ -55,12 +57,14 @@ public final class ExcellentEconomyBridge {
         Object apiInstance,
         Class<?> operationContext,
         Class<?> operationExecutor,
+        Class<?> notificationTarget,
         Object successResult,
         Logger logger
     ) throws ClassNotFoundException, NoSuchMethodException {
         this.apiInstance = apiInstance;
         this.operationContext = operationContext;
         this.operationExecutor = operationExecutor;
+        this.notificationTarget = notificationTarget;
         this.successResult = successResult;
         this.logger = logger;
         this.apiClass = Class.forName(API_CLASS);
@@ -179,10 +183,54 @@ public final class ExcellentEconomyBridge {
         }
         try {
             Object executor = operationExecutor.getMethod("custom", String.class).invoke(null, reason);
-            return operationContext.getMethod("of", operationExecutor).invoke(null, executor);
+            Object context = operationContext.getMethod("of", operationExecutor).invoke(null, executor);
+            return this.silenceChatNotifications(context);
         } catch (ReflectiveOperationException | RuntimeException failure) {
             return null;
         }
+    }
+
+    /**
+     * Stops ExcellentEconomy sending a message of its own for this operation.
+     *
+     * <p>Every balance change through the API ends in one. Its default context
+     * notifies both the player and whoever ran the operation, so a single /pay
+     * produced ExcellentEconomy's "100 has been taken from your account!" directly
+     * above SealCore's own message. SealCore owns /pay and /balance and owns their
+     * messages, so the default is exactly the wrong one for it.
+     *
+     * <p>Only the two chat targets are silenced. The file and console loggers stay
+     * on, because a transfer that is not written to the operation log is the worse
+     * half of the trade.
+     */
+    private Object silenceChatNotifications(Object context) {
+        if (notificationTarget == null) {
+            return context;
+        }
+        Object user = this.notificationConstant("USER");
+        Object executor = this.notificationConstant("EXECUTOR");
+        if (user == null || executor == null) {
+            return context;
+        }
+        try {
+            Object[] targets = {user, executor};
+            Object array = java.lang.reflect.Array.newInstance(notificationTarget, targets.length);
+            System.arraycopy(targets, 0, array, 0, targets.length);
+            return operationContext.getMethod("silentFor", array.getClass()).invoke(context, array);
+        } catch (ReflectiveOperationException | RuntimeException failure) {
+            // Losing the silencing costs a duplicate line, breaking the transfer
+            // would cost the player their money, so the context is kept as built.
+            return context;
+        }
+    }
+
+    private Object notificationConstant(String name) {
+        for (Object constant : notificationTarget.getEnumConstants()) {
+            if (name.equals(String.valueOf(constant))) {
+                return constant;
+            }
+        }
+        return null;
     }
 
     @SuppressWarnings("unchecked")
@@ -291,6 +339,7 @@ public final class ExcellentEconomyBridge {
                 apiInstance,
                 loadOrNull(CONTEXT_CLASS),
                 loadOrNull(EXECUTOR_CLASS),
+                loadOrNull(NOTIFICATION_CLASS),
                 success,
                 logger);
         } catch (ClassNotFoundException | NoSuchMethodException | RuntimeException failure) {

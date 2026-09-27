@@ -116,7 +116,7 @@ class MessagesTest {
     @Test
     void placeholdersAreSubstituted() {
         Path root = tempRoot();
-        write(root, "en.yml", "core:\n  paid: 'got <white><amount></white>'\n");
+        write(root, "en.yml", "core:\n  paid: 'got <white>{amount}</white>'\n");
 
         var messages = Messages.load(plugin(root), "en.yml");
 
