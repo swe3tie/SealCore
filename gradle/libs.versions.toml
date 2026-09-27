@@ -14,6 +14,11 @@ hikaricp = "7.1.0"
 sqliteJdbc = "3.53.4.0"
 mysqlConnector = "26.7.0"
 placeholderapi = "2.11.6"
+vaultApi = "1.7"
+playerPoints = "3.0.0"
+# NightCore is ExcellentEconomy's own core library, and the Folia scheduler lives
+# there rather than in EE. 2.15.1, which EE 2.8.0 pins, predates it.
+nightCore = "2.16.4"
 
 [libraries]
 paperApi = { module = "io.papermc.paper:paper-api", version.ref = "paperV1211" }
@@ -26,6 +31,9 @@ hikaricp = { module = "com.zaxxer:HikariCP", version.ref = "hikaricp" }
 sqliteJdbc = { module = "org.xerial:sqlite-jdbc", version.ref = "sqliteJdbc" }
 mysqlConnectorJ = { module = "com.mysql:mysql-connector-j", version.ref = "mysqlConnector" }
 placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholderapi" }
+vaultApi = { module = "com.github.MilkBowl:VaultAPI", version.ref = "vaultApi" }
+playerPoints = { module = "org.black_ixx:playerpoints", version.ref = "playerPoints" }
+nightCore = { module = "su.nightexpress.nightcore:main", version.ref = "nightCore" }
 
 junitJupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatform" }

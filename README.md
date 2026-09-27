@@ -60,8 +60,10 @@ plugins/SealCore/
 
 **ExcellentEconomy is optional.** Without it the plugin still starts and
 everything works except currency, which reports a clear "no provider" message
-instead of failing. To use it, install ExcellentEconomy too; the mapping between
-SealCore currency keys and its currency ids lives in `config.yml`.
+instead of failing. To use it, install ExcellentEconomy too, plus NightCore; the
+mapping between SealCore currency keys and its currency ids lives in
+`config.yml`. On Folia, or on 26.2, install the fork instead of stock
+ExcellentEconomy, see the design note below.
 
 **Do not install the standalone PacketEvents plugin as well.** SealCore embeds
 its own relocated copy and two injectors on the same channels break connections.
@@ -145,8 +147,18 @@ ExcellentEconomy, so it compiles and runs without it. At boot
 falls back to a no-op provider when the plugin is absent. The reflective
 contract is pinned by test stand-ins declared in the test source set at the
 upstream package and type names, so an upstream rename fails the build instead
-of a live server. ExcellentEconomy 2.8.0 supports up to 26.1.2; 26.2 needs the
-Phase 2 fork.
+of a live server. `excellenteconomy-fork` additionally checks the real
+`ExcellentEconomyAPI` signatures, so a re-boxing of the amount parameter from
+`double` to `Double` fails the build too. That distinction matters: the API
+takes a primitive `double`, and looking it up as `Double` throws
+`NoSuchMethodException` and silently drops SealCore to its no-op provider.
+
+**Upstream ExcellentEconomy is Paper 26.1.2 only.** For Folia, or for 26.2,
+use the jar from `excellenteconomy-fork`, which is EE 2.8.0 with the Folia flag
+in both plugin descriptors, NightCore bumped to the first line with a Folia
+scheduler, and a fix for an upstream bug that crashed EE on any server without
+Vault installed. It is verified booting on Folia 26.1.2 and 26.2. See
+`excellenteconomy-fork/FORK.md`.
 
 **Folia needs no separate dependency.** The regionised scheduler interfaces are
 byte identical across 1.21 and 26.x, so `RegionizedTaskScheduler` compiles once
@@ -311,9 +323,9 @@ fails before review.
 
 1. Framework, and the `economy` module: `/balance`, `/pay`, with `/sell` and
    `/shop` to come in `modules/economy.yml`.
-2. `excellenteconomy-fork`: a Java fork of ExcellentEconomy with 26.2 and Folia
-   support. The `include` line in `settings.gradle.kts` is already in place,
-   commented out, for when that module lands.
+2. Done: `excellenteconomy-fork`, a Java fork of ExcellentEconomy with 26.2 and
+   Folia support. Build it with `./gradlew :excellenteconomy-fork:build`. It needs
+   NightCore installed alongside it, which it does not bundle.
 3. Feature modules: shops, jobs, auctions, claims, and whatever else the SMP
    needs, each consuming the framework through the service registry.
 

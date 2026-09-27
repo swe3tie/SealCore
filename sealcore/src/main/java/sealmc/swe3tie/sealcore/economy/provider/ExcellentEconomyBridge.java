@@ -72,7 +72,7 @@ public final class ExcellentEconomyBridge {
         this.withdrawOperation = resolveOperation("withdrawAsync");
         Class<?> currencyClass = loadOrNull(CURRENCY_CLASS);
         this.getCurrencyIdMethod = findMethod(currencyClass, "getId");
-        this.formatValueMethod = findMethod(currencyClass, "formatValue", Double.class);
+        this.formatValueMethod = findMethod(currencyClass, "formatValue", double.class);
     }
 
     private static final class Operation {
@@ -211,9 +211,14 @@ public final class ExcellentEconomyBridge {
         return apiClass.getMethod(name, types);
     }
 
+    // Upstream's amount parameter is a primitive double, not java.lang.Double, so
+    // every lookup in this class has to ask for double.class. Asking for the wrapper makes
+    // getMethod throw and takes the whole bridge down with it, which is why the
+    // test stand-in declares a primitive and not a boxed amount either.
+
     private Operation resolveOperation(String name) throws NoSuchMethodException {
-        Method three = method(name, UUID.class, String.class, Double.class);
-        Method four = operationContext == null ? null : findMethod(apiClass, name, UUID.class, String.class, Double.class,
+        Method three = method(name, UUID.class, String.class, double.class);
+        Method four = operationContext == null ? null : findMethod(apiClass, name, UUID.class, String.class, double.class,
             operationContext);
         return new Operation(three, four);
     }

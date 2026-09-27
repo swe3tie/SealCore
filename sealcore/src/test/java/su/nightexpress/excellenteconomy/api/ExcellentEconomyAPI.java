@@ -17,9 +17,10 @@ import su.nightexpress.excellenteconomy.api.currency.operation.OperationResult;
  * class by name and invokes the methods reflectively, which pins the exact names and
  * parameter types the plugin depends on without vendoring the third party jar.
  *
- * <p>Amounts are boxed {@code Double} on purpose: the bridge looks the methods up by
- * {@code Double.class}, so a primitive {@code double} here would make the reflective
- * contract fail exactly the way a renamed upstream method would.
+ * <p>Amounts are a primitive {@code double}, because that is what upstream declares.
+ * The bridge looks the methods up by {@code double.class}, so boxing them here would
+ * make the test pass against a contract the real API does not have. Verified against
+ * ExcellentEconomy 2.8.0 and re-checked by the fork module's ApiSurfaceTest.
  */
 public interface ExcellentEconomyAPI {
 
@@ -36,13 +37,13 @@ public interface ExcellentEconomyAPI {
 
     CompletableFuture<Double> getBalanceAsync(UUID playerId, String currencyName);
 
-    CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, Double amount);
+    CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, double amount);
 
-    CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, Double amount, Object context);
+    CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, double amount, Object context);
 
-    CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, Double amount);
+    CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, double amount);
 
-    CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, Double amount, Object context);
+    CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, double amount, Object context);
 
     /** In-memory backing store so the tests can assert real balances. */
     final class Fake implements ExcellentEconomyAPI {
@@ -73,7 +74,7 @@ public interface ExcellentEconomyAPI {
         }
 
         @Override
-        public CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, Double amount) {
+        public CompletableFuture<OperationResult> depositAsync(UUID playerId, String currencyName, double amount) {
             return apply(playerId, currencyName, amount, "deposit", null);
         }
 
@@ -81,14 +82,14 @@ public interface ExcellentEconomyAPI {
         public CompletableFuture<OperationResult> depositAsync(
             UUID playerId,
             String currencyName,
-            Double amount,
+            double amount,
             Object context
         ) {
             return apply(playerId, currencyName, amount, "deposit", context);
         }
 
         @Override
-        public CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, Double amount) {
+        public CompletableFuture<OperationResult> withdrawAsync(UUID playerId, String currencyId, double amount) {
             return apply(playerId, currencyId, amount, "withdraw", null);
         }
 
@@ -96,7 +97,7 @@ public interface ExcellentEconomyAPI {
         public CompletableFuture<OperationResult> withdrawAsync(
             UUID playerId,
             String currencyId,
-            Double amount,
+            double amount,
             Object context
         ) {
             return apply(playerId, currencyId, amount, "withdraw", context);
@@ -105,7 +106,7 @@ public interface ExcellentEconomyAPI {
         private CompletableFuture<OperationResult> apply(
             UUID playerId,
             String currencyId,
-            Double amount,
+            double amount,
             String operation,
             Object context
         ) {

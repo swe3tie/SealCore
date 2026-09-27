@@ -1,0 +1,178 @@
+Command:
+  Argument:
+    Name:
+      Currency: currency
+      Page: page
+      Plugin: plugin
+      Symbol: symbol
+      Decimals: allowDecimals
+  Create:
+    Desc: 创建新货币
+  Migrate:
+    Desc: 从其他插件迁移数据
+  Reset:
+    Desc: 重置玩家余额
+    Done: "<gray>已重置 <green>%player_name% <gray>的所有货币余额!"
+  ResetAll:
+    Desc: 重置所有用户余额
+  Wallet:
+    Desc: 查看完整余额
+  Currency:
+    Root:
+      Desc: "%currency_name%相关命令"
+    Balance:
+      Desc: 查看余额
+    Give:
+      Desc: 向玩家添加货币
+      Done: "<gray>已为 <green>%player_name% <gray>添加 <gold>%amount%"
+      Notify: "<gray>你的账户已添加 <gold>%amount% <gray>!"
+    GiveAll:
+      Desc: 向所有在线玩家添加货币
+      Done: "<gray>已为 <aqua>所有在线玩家 <gray>添加 <gold>%amount%"
+    Take:
+      Desc: 扣除玩家货币
+      Done: "<gray>已从 <green>%player_name% <gray>扣除 <gold>%amount%"
+      Notify: "<gray>你的账户已扣除 <gold>%amount% <gray>!"
+    Set:
+      Desc: 设置玩家货币余额
+      Done: "<gray>已将 <green>%player_name% <gray>的 <aqua>%currency_name% <gray>余额设为 <gold>%balance%"
+      Notify: "<gray>你的 <aqua>%currency_name% <gray>余额已设为 <gold>%amount%"
+    Send:
+      Desc: 向玩家转账
+      Error:
+        NotEnough: "<red>你的 <aqua>%currency_name% <red>不足!"
+        TooLow: "<red>转账金额不能低于 <gold>%amount% <red>!"
+        NoPayments: "<green>%player_name% <red>不接受 <aqua>%currency_name% <red>转账!"
+      Done:
+        Sender: "<gray>你已向 <green>%player_name% <gray>转账 <gold>%amount% <gray>!"
+        Notify: "<gray>你收到 <green>%player_name% <gray>转账的 <gold>%amount% <gray>!"
+    Payments:
+      Desc: 切换是否接受其他玩家转账
+      Toggle: "<aqua>%currency_name% <gray>收款状态: <aqua>%state%"
+      Target: "<green>%player_name% <gray>的 <aqua>%currency_name% <gray>收款状态: <aqua>%state%"
+    Exchange:
+      Desc: 货币兑换
+    Top:
+      Desc: 余额最高的玩家排行榜
+      List:
+        - <noprefix>
+        - "<dark_gray>--------------------------------"
+        - "<gray>拥有最多 <aqua>%currency_name% <gray>的玩家"
+        - " "
+        - "%entry%"
+        - " "
+        - "%previous_page%  <gray>页码 <yellow>%current% <dark_gray>/ <yellow>%max%  %next_page%"
+        - "<dark_gray>--------------------------------"
+      Entry: "<yellow>#%pos% <green>%player_name% <dark_gray>▪ <gold>%balance%"
+Migration:
+  Start:
+    Blocked: "<red>后台任务运行中，无法开始迁移!"
+    BadPlugin: "<red>插件不支持或未安装!"
+    BadCurrency: "<red>无法将 <aqua>%name% <red>数据迁移至 <aqua>%currency_name%"
+  Started:
+    - <noprefix>
+    - "<dark_gray>--------------------------------"
+    - "<gray>[ <red>→ <gray>] 数据迁移:"
+    - " "
+    - "<gray>正在从 <aqua>%name% <gray>迁移数据，请稍候..."
+    - " "
+    - "<red><underline>迁移完成前所有货币操作已禁用"
+    - "<dark_gray>--------------------------------"
+  Completed:
+    - <noprefix>
+    - "<dark_gray>--------------------------------"
+    - "<gray>[ <green>→<gray> ] 数据迁移:"
+    - " "
+    - "<gray>已完成从 <aqua>%name% <gray>的数据迁移!"
+    - " "
+    - "<green><underline>所有货币操作已重新启用"
+    - "<dark_gray>--------------------------------"
+ResetAll:
+  Start:
+    Blocked: "<red>后台任务运行中，无法开始余额重置!"
+  Started:
+    Currency:
+      - <noprefix>
+      - "<dark_gray>--------------------------------"
+      - "<gray>余额重置:"
+      - " "
+      - "<yellow>正在重置所有玩家的 <aqua>%currency_name% <yellow>余额，请稍候..."
+      - " "
+      - "<red><underline>重置完成前所有货币操作已禁用"
+      - "<dark_gray>--------------------------------"
+    Global:
+      - <noprefix>
+      - <dark_gray>--------------------------------
+      - "<gray>余额重置:"
+      - " "
+      - "<yellow>正在重置所有玩家的全部货币余额，请稍候..."
+      - " "
+      - "<red><underline>重置完成前所有货币操作已禁用"
+      - "<dark_gray>--------------------------------"
+  Completed:
+    Currency:
+      - <noprefix>
+      - <dark_gray>--------------------------------
+      - "<gray>余额重置:"
+      - " "
+      - "<green>已完成所有玩家的 <aqua>%currency_name% <green>余额重置!"
+      - " "
+      - "<green><underline>所有货币操作已重新启用"
+      - "<dark_gray>--------------------------------"
+    Global:
+      - <noprefix>
+      - "<dark_gray>--------------------------------"
+      - "<gray>余额重置:"
+      - " "
+      - "<gray>已完成所有玩家的全部货币余额重置!"
+      - " "
+      - "<green><underline>所有货币操作已重新启用"
+      - "<dark_gray>--------------------------------"
+Currency:
+  Create:
+    BadName: "<red>无效名称!仅支持拉丁字母和数字"
+    Duplicated: "<red>已存在同名货币"
+    Success: "<gray>已创建新货币: <aqua>%currency_name% <gray>( <dark_gray>ID: <aqua>%currency_id% <dark_gray>)"
+  Balance:
+    Display:
+      Own: "<gray>余额: <gold>%balance%"
+      Others: "<green>%player_name% <gray>的余额: <gold>%balance%"
+  Wallet:
+    Own:
+      - <noprefix>
+      - "<dark_gray>--------------------------------"
+      - "<gray>你的钱包:"
+      - " "
+      - "%entry%"
+      - "<dark_gray>--------------------------------"
+    Others:
+      - <noprefix>
+      - "<dark_gray>--------------------------------"
+      - "<green>%player_name% <gray>的钱包:"
+      - " "
+      - "%entry%"
+      - "<dark_gray>--------------------------------"
+    Entry: "<yellow>• <aqua>%currency_name%: <gold>%balance%"
+  Exchange:
+    Error:
+      Disabled: "<aqua>%currency_name% <red>不可兑换!"
+      NoRate: "<aqua>%currency_name% <red>无法兑换为 <aqua>%name% <red>!"
+      LowAmount: "<aqua>%currency_name% <red>兑换金额过低!"
+      LimitExceed: "<gray>应获得 <gold>%amount%<gray>，但持有上限为 <gold>%max% <gray>!"
+      LowBalance: "<red>兑换所需的 <aqua>%amount% 不足!"
+    Success: "<gray>已将 <aqua>%balance% <gray>兑换为 <gold>%amount% <gray>!"
+  Error:
+    Invalid: "<aqua>%value% <red>不是有效货币!"
+TopList:
+  NextPage:
+    Active: <hover:show_text:"<gray>点击前往下一页"><click:run_command:"/%currency_label% top %value%"><gray>[ <green>→ <gray>]</click></hover>
+    Inactive: <hover:show_text:"<gray>没有更多页面"><gray>[ <dark_gray>→ <gray>]</hover>
+  PreviousPage:
+    Active: <hover:show_text:"<gray>点击前往上一页"><click:run_command:"/%currency_label% top %value%"><gray>[ <green>← <gray>]</click></hover>
+    Inactive: <hover:show_text:"<gray>没有更多页面"><gray>[ <dark_gray>← <gray>]</hover>
+VaultEconomy:
+  Error:
+    InvalidPlayer: 玩家不存在
+    InsufficientFunds: 资金不足!
+Other:
+  NoTopEntry: <none>

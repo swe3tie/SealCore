@@ -5,7 +5,7 @@ public interface ExcellentCurrency {
 
     String getId();
 
-    String formatValue(Double amount);
+    String formatValue(double amount);
 
     record Simple(String id) implements ExcellentCurrency {
 
@@ -15,7 +15,7 @@ public interface ExcellentCurrency {
         }
 
         @Override
-        public String formatValue(Double amount) {
+        public String formatValue(double amount) {
             return id + ":" + amount;
         }
     }
