@@ -1,7 +1,6 @@
 import java.util.concurrent.TimeUnit
 
 plugins {
-    alias(libs.plugins.kotlinJvm) apply false
     alias(libs.plugins.shadow) apply false
 }
 

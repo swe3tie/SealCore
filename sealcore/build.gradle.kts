@@ -1,9 +1,7 @@
 import org.gradle.api.attributes.java.TargetJvmVersion
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 plugins {
-    alias(libs.plugins.kotlinJvm)
+    `java-library`
     alias(libs.plugins.shadow)
 }
 
@@ -14,19 +12,17 @@ val gitBranch = rootProject.extra["gitBranch"] as String
 val gitCommit = rootProject.extra["gitCommit"] as String
 
 java {
-    // The build itself runs on JDK 25 (26.x Paper API and the Phase 2 EE fork are
-    // Java 25 classfiles), but the shipped jar targets Java 21 so a single
-    // artifact runs on 1.21.11 and both 26.x lines.
+    // The build itself runs on JDK 25, because the 26.x Paper API is Java 25
+    // bytecode, but the shipped jar targets Java 21 so one artifact runs on
+    // 1.21.11 and both 26.x lines.
     toolchain.languageVersion.set(JavaLanguageVersion.of(25))
-    sourceCompatibility = JavaVersion.VERSION_21
-    targetCompatibility = JavaVersion.VERSION_21
     withSourcesJar()
 }
 
-kotlin {
-    compilerOptions {
-        jvmTarget.set(JvmTarget.JVM_21)
-    }
+// `release` rather than source/target compatibility: it also pins the API, so
+// a method newer than 21 cannot slip in through the JDK 25 toolchain.
+tasks.withType<JavaCompile>().configureEach {
+    if (!name.startsWith("compileCompat")) options.release.set(21)
 }
 
 dependencies {
@@ -45,7 +41,6 @@ dependencies {
     implementation(libs.packeteventsSpigot)
 
     testImplementation(libs.junitJupiter)
-    testImplementation(libs.kotlinTestJunit5)
     testRuntimeOnly(libs.junitPlatformLauncher)
     testImplementation(libs.hikaricp)
     testImplementation(libs.sqliteJdbc)
@@ -67,23 +62,21 @@ tasks.test {
 // The same sources are recompiled against the two newer Paper API lines. If an
 // API we call was removed or changed in the 1.21 -> 26 jump, this fails the
 // build instead of failing on a live server. Each version gets its own source
-// set so the Kotlin plugin wires the compiler task up properly.
+// set, compiled with its own classpath.
 // ---------------------------------------------------------------------------
 val compatVersions = mapOf(
     "26.1.2" to libs.versions.paperV2612.get(),
     "26.2" to libs.versions.paperV262.get(),
 )
 
-val mainKotlinDirs = sourceSets.main.get().kotlin.srcDirs
+val mainJavaDirs = sourceSets.main.get().java.srcDirs
 
 val compatTasks = compatVersions.map { (mcVersion, paperVersion) ->
     val suffix = mcVersion.replace(".", "")
-    val set = sourceSets.create("compat$suffix") {
-        // Only sources, never the main output: the point is to prove the code
-        // compiles against a different API, not to produce a runnable jar.
-        java.setSrcDirs(emptyList<File>())
-    }
-    set.kotlin.srcDirs(mainKotlinDirs)
+    // Only sources, never the main output: the point is to prove the code
+    // compiles against a different API, not to produce a runnable jar.
+    val set = sourceSets.create("compat$suffix")
+    set.java.setSrcDirs(mainJavaDirs)
 
     dependencies {
         add("compat${suffix}CompileOnly", "io.papermc.paper:paper-api:$paperVersion")
@@ -103,18 +96,10 @@ val compatTasks = compatVersions.map { (mcVersion, paperVersion) ->
     }
 
     tasks.named<JavaCompile>("compileCompat${suffix}Java") {
-        sourceCompatibility = JavaVersion.VERSION_25.toString()
-        targetCompatibility = JavaVersion.VERSION_25.toString()
-        options.release.set(25)
-    }
-
-    tasks.named<KotlinCompile>("compileCompat${suffix}Kotlin") {
         group = "verification"
         description = "Compiles the plugin against the Paper API of Minecraft $mcVersion."
-        compilerOptions {
-            // The 26.x API is Java 25 bytecode, so the gate must run on 25.
-            jvmTarget.set(JvmTarget.JVM_25)
-        }
+        // The 26.x API is Java 25 bytecode, so the gate must run on 25.
+        options.release.set(25)
     }
 }
 

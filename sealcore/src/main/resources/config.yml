@@ -8,9 +8,12 @@
 
 # Language file to use, under languages/. en.yml is the fallback for every
 # other language, so a partial translation shows English rather than blanks.
-lang: en.yml
+lang: vi.yml
 
 general:
+  # Hex colour behind the <accent> MiniMessage tag. Change it here and every
+  # language file follows. Not a restart key: a reload applies it.
+  accent-color: '#9CC0D9'
   # How often open packet GUIs and HUD widgets refresh, in ticks.
   # Restart only: a reload reports it instead of applying it.
   refresh-interval-ticks: 20

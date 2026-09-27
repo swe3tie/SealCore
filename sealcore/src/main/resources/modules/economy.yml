@@ -1,0 +1,42 @@
+# SealCore - economy module.
+#
+# Balances, transfers and (later) selling and shops. The currency names map to
+# ExcellentEconomy currency ids through `economy.currencies` in config.yml.
+schema-version: 1
+enabled: true
+
+# Which SealCore currency this module moves: money, shards or coins.
+currency: money
+
+players:
+  # Resolve a player who has joined before, even while they are offline. Needs
+  # storage; without it only online players resolve. No name is ever looked up
+  # over the network, because that blocks a server thread.
+  allow-offline: true
+
+balance:
+  permission: sealcore.economy.balance
+  # /balance <player> may look at somebody else's balance.
+  allow-other-players: true
+
+pay:
+  permission: sealcore.economy.pay
+  # Holders skip the amount range and the cooldown. Default op.
+  bypass-permission: sealcore.economy.bypass
+  min-amount: 1.0
+  max-amount: 1000000000.0
+  allow-self: false
+  # Chat and actionbar on both sides of a transfer. Amounts accept k/m/b/t, so
+  # `/pay Steve 2.5k` works.
+  chat-message: true
+  actionbar: true
+  # Anti spam between two /pay commands. 0 turns it off.
+  cooldown-seconds: 0.0
+
+format:
+  # How a balance is written in every message: $89.89M
+  symbol: '$'
+  decimals: 2
+  # Shorten with the suffixes below. false writes $1,234.56 instead.
+  compact: true
+  suffixes: [K, M, B, T, Qa, Qi]

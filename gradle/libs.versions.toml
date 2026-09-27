@@ -1,5 +1,4 @@
 [versions]
-kotlin = "2.4.20"
 shadow = "9.6.1"
 junit = "5.14.4"
 junitPlatform = "1.14.4"
@@ -17,8 +16,6 @@ mysqlConnector = "26.7.0"
 placeholderapi = "2.11.6"
 
 [libraries]
-kotlin-stdlib = { module = "org.jetbrains.kotlin:kotlin-stdlib", version.ref = "kotlin" }
-
 paperApi = { module = "io.papermc.paper:paper-api", version.ref = "paperV1211" }
 paperApiV2612 = { module = "io.papermc.paper:paper-api", version.ref = "paperV2612" }
 paperApiV262 = { module = "io.papermc.paper:paper-api", version.ref = "paperV262" }
@@ -32,8 +29,6 @@ placeholderapi = { module = "me.clip:placeholderapi", version.ref = "placeholder
 
 junitJupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit" }
 junitPlatformLauncher = { module = "org.junit.platform:junit-platform-launcher", version.ref = "junitPlatform" }
-kotlinTestJunit5 = { module = "org.jetbrains.kotlin:kotlin-test-junit5", version.ref = "kotlin" }
 
 [plugins]
-kotlinJvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }

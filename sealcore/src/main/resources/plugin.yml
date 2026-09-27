@@ -25,6 +25,15 @@ commands:
     usage: /sealcore <version|reload|debug>
     aliases: [sc]
     permission: sealcore.command
+  balance:
+    description: Show a balance.
+    usage: /balance [player]
+    aliases: [bal]
+    permission: sealcore.economy.balance
+  pay:
+    description: Send money to another player.
+    usage: /pay <player> <amount>
+    permission: sealcore.economy.pay
 
 permissions:
   sealcore.command:
@@ -39,3 +48,19 @@ permissions:
   sealcore.command.debug:
     description: Print framework state.
     default: op
+  sealcore.economy.balance:
+    description: Use /balance.
+    default: true
+  sealcore.economy.pay:
+    description: Use /pay.
+    default: true
+  sealcore.economy.bypass:
+    description: Ignore the /pay amount range and cooldown.
+    default: op
+  sealcore.economy.*:
+    description: Every economy permission.
+    default: op
+    children:
+      sealcore.economy.balance: true
+      sealcore.economy.pay: true
+      sealcore.economy.bypass: true

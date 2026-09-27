@@ -2,9 +2,11 @@
 
 All-in-one economy SMP plugin for Paper and Folia.
 
-Phase 1 is the framework: no gameplay features yet. It gives feature modules
-storage, currency access, a packet driven GUI, HUD widgets, placeholders and a
-command tree, so later phases are wiring rather than infrastructure.
+Phase 1 is the framework, and the first feature module on top of it: the
+**economy** module with `/balance` and `/pay` on ExcellentEconomy. The framework
+gives feature modules storage, currency access, a packet driven GUI, HUD widgets,
+placeholders and a command tree, so later modules are wiring rather than
+infrastructure.
 
 | | |
 | --- | --- |
@@ -16,7 +18,8 @@ command tree, so later phases are wiring rather than infrastructure.
 | **Packets** | PacketEvents, shaded and relocated |
 | **Storage** | SQLite by default, MySQL optional, JDBC over HikariCP |
 
-> **Status: framework complete, no gameplay modules yet.**
+> **Status: framework plus the economy module (`/balance`, `/pay`). `/sell`
+> and `/shop` are next, in the same module file.**
 
 ## Build
 
@@ -50,9 +53,9 @@ configuration on first run:
 
 ```
 plugins/SealCore/
-├── config.yml          engine and shared settings
-├── languages/en.yml    every player facing string
-└── modules/            one file per module, created as modules arrive
+├── config.yml            engine and shared settings
+├── languages/            en.yml and vi.yml, every player facing string
+└── modules/economy.yml   one file per module
 ```
 
 **ExcellentEconomy is optional.** Without it the plugin still starts and
@@ -77,9 +80,10 @@ SealCore logs a warning if it finds the standalone one.
 | `gui.packet` | The only code that imports PacketEvents |
 | `hud` | Sidebar, boss bar, action bar and title widgets |
 | `placeholder` | `%prefix_key%` engine and the PlaceholderAPI expansion |
-| `command` | Node based dispatcher and `/sealcore` |
+| `command` | Node based dispatcher, the Bukkit adapter, `/sealcore` |
+| `modules` | Feature modules, one package each, starting with `economy` |
 | `listener` | Join and quit handling |
-| `text`, `util` | Component rendering, slot maths, caches, coroutine helpers |
+| `text`, `util` | MiniMessage rendering and the `<accent>` tag, slot maths, caches |
 
 ## Configuration
 
@@ -105,7 +109,8 @@ the module count grows.
 (`jobs.miner.payout-received`) and its placeholder namespace
 (`%jobs_miner_level%`). Nothing is named twice.
 
-**Language fallback.** `lang: en.yml` in `config.yml` picks the file. A key
+**Language fallback.** `lang: vi.yml` in `config.yml` picks the file, with
+`en.yml` shipped as the fallback for every other language. A key
 missing from the active language falls back to `languages/en.yml` before it
 renders the key itself, so a partial translation shows English rather than
 blanks. Language names resolve case insensitively, so `EN`, `en` and `en.yml`
@@ -113,6 +118,17 @@ all land on the same file.
 
 **Messages never live in a module file.** Translating therefore never touches a
 settings file, and one file per language is what a translator actually wants.
+
+**Strings are MiniMessage.** Every message, GUI title and HUD line is parsed by
+MiniMessage, so `<red>`, `<gradient:...>`, `<bold>` and friends all work. On top
+of the standard tags SealCore adds `<accent>`, which resolves to
+`general.accent-color` in `config.yml` (`#9CC0D9` out of the box). Change that
+one value and every language file follows; a value that is not a hex colour is
+reported and the last good colour stays.
+
+**Money is formatted by SealCore.** `modules/economy.yml` owns the symbol, the
+decimals and the `K/M/B/T/Qa/Qi` suffixes, so `$89.89M` reads the same on every
+server no matter how the currency is configured inside ExcellentEconomy.
 
 ## Boot order
 
@@ -148,31 +164,49 @@ plugin logs a warning if it finds one.
 
 Three steps, all driven by the framework. A module is a class and a file.
 
-```kotlin
-class JobsMinerModule : SealModule<JobsMinerModule.Spec> {
+```java
+public final class JobsMinerModule implements SealModule<JobsMinerModule.Spec> {
 
-    override val id = "jobs.miner"
-    override val schemaVersion = 2
-    override val dependsOn = setOf("economy")
-
-    /** Restart only keys, reported instead of silently applied. */
-    override val restartKeys = setOf("reward-table")
-
-    data class Spec(
-        val payout: Double,
-        val cooldownSeconds: Int,
-    ) : ModuleSpec() {
-        override fun describe() = "payout=$payout cooldown=${cooldownSeconds}s"
+    @Override
+    public String id() {
+        return "jobs.miner";
     }
 
-    override fun parse(section: ModuleSection): Spec = Spec(
+    @Override
+    public int schemaVersion() {
+        return 2;
+    }
+
+    @Override
+    public Set<String> dependsOn() {
+        return Set.of("economy");
+    }
+
+    /** Restart only keys, reported instead of silently applied. */
+    @Override
+    public Set<String> restartKeys() {
+        return Set.of("reward-table");
+    }
+
+    public record Spec(double payout, int cooldownSeconds) implements ModuleSpec {
+
+        @Override
+        public String describe() {
+            return "payout=" + payout + " cooldown=" + cooldownSeconds + "s";
+        }
+    }
+
+    @Override
+    public Spec parse(ModuleSection section) {
         // Every getter takes a default, so a partial file still loads, and a
         // wrong value is reported with the file and key instead of throwing.
-        payout = section.double("payout", 12.0, min = 0.0),
-        cooldownSeconds = section.int("cooldown-seconds", 30, min = 0, max = 3600),
-    )
+        return new Spec(
+            section.decimal("payout", 12.0, 0.0, Double.MAX_VALUE),
+            section.integer("cooldown-seconds", 30, 0, 3600));
+    }
 
-    override fun enable(spec: Spec) {
+    @Override
+    public void enable(Spec spec) {
         // Idempotent: runs on boot and after every successful reload.
     }
 }
@@ -182,14 +216,31 @@ Ship the default as `resources/modules/jobs-miner.yml` and register the class in
 `SealCore.featureModules()`. The file is copied out on first run, the spec is
 validated, and the module is enabled.
 
+**Commands come from the module too.** Override `commands(context)` and return
+one `SealCommand` per command; the framework binds the tree on boot and again on
+every reload.
+
+```java
+@Override
+public List<SealCommand> commands(ModuleContext context) {
+    return List.of(
+        new SealCommand(this, "balance", "Show a balance", "/balance [player]",
+            ctx -> new BalanceCommand(ctx, this).node()));
+}
+```
+
+The name must also exist under `commands:` in `plugin.yml`, because that is where
+the server looks it up. A command whose module is switched off answers with
+`core.module-disabled` instead of disappearing, so a player never gets silence
+from a command that still exists.
+
 **Migrations, not version stamps.** When the file layout changes, bump
 `schemaVersion` and add a migration. Unlike a `ConfigId` that overwrites the
 file, a migration leaves keys an operator added by hand alone.
 
-```kotlin
-addMigration(ModuleMigration("jobs.miner", fromVersion = 1) { section ->
-    section.set("cooldown-seconds", section.getInt("cooldown"))
-})
+```java
+addMigration(new ModuleMigration("jobs.miner", 1,
+    section -> section.set("cooldown-seconds", section.getInt("cooldown"))));
 ```
 
 **Reload is two phase and per module.** Every module is read, migrated, parsed
@@ -216,6 +267,14 @@ config parser, version ordering, slot and paging maths, placeholder token
 resolution, the ExcellentEconomy bridge, and the whole module system: typed
 config reading, last good retention on a failed reload, dependency skipping and
 cycles, migrations, restart reporting and language fallback.
+
+The economy module is tested through the command dispatcher with the real
+Vietnamese language file, so the strings the tests assert on are the strings a
+player sees: both `/balance` forms, both sides of `/pay` in chat and on the
+actionbar, self pay, the amount range, insufficient funds, unknown players, the
+cooldown, the bypass permission and a missing provider. A test also compares
+`en.yml` and `vi.yml` key by key, and checks that every permission a module file
+uses is declared in `plugin.yml`.
 
 Booting a real server is a separate step; the packet path is only covered up to
 packet construction, because rendering needs an actual Minecraft client.
@@ -250,7 +309,8 @@ fails before review.
 
 ## Phases
 
-1. Framework: this module, no gameplay features.
+1. Framework, and the `economy` module: `/balance`, `/pay`, with `/sell` and
+   `/shop` to come in `modules/economy.yml`.
 2. `excellenteconomy-fork`: a Java fork of ExcellentEconomy with 26.2 and Folia
    support. The `include` line in `settings.gradle.kts` is already in place,
    commented out, for when that module lands.
@@ -259,9 +319,27 @@ fails before review.
 
 ## Commands
 
-`/sealcore version`, `/sealcore reload`, `/sealcore modules`, and
-`/sealcore debug <platform|economy|storage|gui|hud|config>`.
+| Command | Permission | What it does |
+| --- | --- | --- |
+| `/balance [player]` (`/bal`) | `sealcore.economy.balance` | `Bạn có $89.89M`, or another player's balance |
+| `/pay <player> <amount>` | `sealcore.economy.pay` | Sends money; both sides are told in chat and on the actionbar |
+| `/sealcore version` | `sealcore.command.version` | Shows the loaded version and platform |
+| `/sealcore reload` | `sealcore.command.reload` | Reloads config, modules and language |
+| `/sealcore modules` | `sealcore.command.debug` | Lists module state |
+| `/sealcore debug <...>` | `sealcore.command.debug` | Framework state |
 
 `reload` and `modules` exist because "it reloaded" is not the same as "your
 change took effect". Both report which modules applied, which kept their last
 good spec, and which keys need a restart.
+
+**Amounts.** `/pay Steve 2.5k` reads `k`, `m`, `b` and `t` suffixes, and
+`1,250` is fine as typed. `modules/economy.yml` sets the range, whether a
+player may pay themselves, and whether chat and the actionbar are used.
+
+**Who can be paid.** Anyone online, plus anyone who has joined before, found by
+name in the `sealcore_players` table. A name the server has never seen is not
+looked up over the network, because that web call blocks a server thread. With
+storage unavailable only online players resolve.
+
+**Permissions.** `sealcore.economy.bypass` (default op) ignores the amount
+range and the cooldown; `sealcore.economy.*` grants all three.
