@@ -1,0 +1,48 @@
+# SealCore - Tiếng Việt
+# Thiếu khóa nào sẽ tự dùng bản tiếng Anh (en.yml).
+# Định dạng: MiniMessage - https://docs.advntr.dev/minimessage/format.html
+
+config-version: 1
+
+prefix: '<accent><bold>SealCore</bold></accent> <dark_gray>»</dark_gray> '
+
+core:
+  no-permission: '<prefix><red>Bạn không có quyền làm điều này.'
+  players-only: '<prefix><red>Chỉ người chơi mới dùng được lệnh này.'
+  player-not-found: '<prefix><red>Không tìm thấy người chơi <white><player></white>.'
+  invalid-number: '<prefix><red><input> không phải là số hợp lệ.'
+  module-disabled: '<prefix><red>Tính năng này đang tắt.'
+  hook-missing: '<prefix><red>Tính năng này cần <white><hook></white> nhưng chưa được cài.'
+  reload:
+    success: '<prefix><green>Đã tải lại trong <white><time>ms</white>.'
+    failed: '<prefix><red>Tải lại thất bại: <white><error></white>. Xem console.'
+  version: '<prefix><gray>Đang chạy <accent>SealCore <version></accent> trên <white><server></white>.'
+  module:
+    list-header: '<prefix><gray>Mô-đun (<white><count></white>):'
+    list-entry: '<dark_gray> - </dark_gray><white><module></white> <dark_gray>[</dark_gray><state><dark_gray>]</dark_gray>'
+    unknown: '<prefix><red>Không có mô-đun <white><module></white>.'
+    enabled: '<prefix><green>Đã bật mô-đun <white><module></white>.'
+    disabled: '<prefix><yellow>Đã tắt mô-đun <white><module></white>.'
+    reloaded: '<prefix><green>Đã tải lại mô-đun <white><module></white>.'
+    failed: '<prefix><red>Mô-đun <white><module></white> lỗi: <white><error></white>.'
+
+economy:
+  unknown-currency: '<prefix><red>Không có loại tiền <white><currency></white>.'
+  balance:
+    self-header: '<prefix><gray>Số dư của bạn:'
+    other-header: '<prefix><gray>Số dư của <white><player></white>:'
+    entry: '<dark_gray> - </dark_gray><gray><currency>: <accent><amount>'
+  pay:
+    sent: '<prefix><gray>Bạn đã gửi <accent><amount></accent> cho <white><player></white>.'
+    received: '<prefix><gray>Bạn nhận được <accent><amount></accent> từ <white><player></white>.'
+    not-enough: '<prefix><red>Bạn không đủ tiền. Số dư: <white><balance></white>.'
+    self: '<prefix><red>Bạn không thể tự chuyển cho mình.'
+    out-of-range: '<prefix><red>Số tiền phải từ <white><min></white> đến <white><max></white>.'
+    cooldown: '<prefix><red>Chờ <white><seconds>s</white> trước khi chuyển tiếp.'
+    currency-not-allowed: '<prefix><red>Bạn không thể chuyển <white><currency></white>.'
+    failed: '<prefix><red>Giao dịch thất bại. Bạn chưa bị trừ tiền.'
+  baltop:
+    header: '<prefix><gray>Top <accent><currency></accent> <dark_gray>(trang <page>/<pages>)'
+    entry: '<dark_gray>#<position></dark_gray> <white><player></white> <dark_gray>-</dark_gray> <accent><amount>'
+    empty: '<prefix><gray>Bảng xếp hạng đang trống.'
+    unavailable: '<prefix><red>Bảng xếp hạng đang tắt trong ExcellentEconomy.'

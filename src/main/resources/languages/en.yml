@@ -1,0 +1,59 @@
+# SealCore - English (fallback for every other language)
+# Format: MiniMessage - https://docs.advntr.dev/minimessage/format.html
+#   <accent>     colour from config.yml general.accent-color
+#   <prefix>     the prefix below
+#   <name>       per-message placeholders, listed next to each message
+# A message may be a single string or a list of lines. Set it to '' to hide it.
+# PlaceholderAPI placeholders (%...%) work when the hook is enabled.
+
+config-version: 1
+
+prefix: '<accent><bold>SealCore</bold></accent> <dark_gray>»</dark_gray> '
+
+core:
+  no-permission: '<prefix><red>You do not have permission to do that.'
+  players-only: '<prefix><red>Only players can use this.'
+  player-not-found: '<prefix><red>Player <white><player></white> was not found.'
+  invalid-number: '<prefix><red><input> is not a valid amount.'
+  module-disabled: '<prefix><red>This feature is currently disabled.'
+  hook-missing: '<prefix><red>This feature needs <white><hook></white>, which is not installed.'
+  reload:
+    success: '<prefix><green>Reloaded in <white><time>ms</white>.'
+    failed: '<prefix><red>Reload failed: <white><error></white>. Check the console.'
+  version: '<prefix><gray>Running <accent>SealCore <version></accent> on <white><server></white>.'
+  module:
+    list-header: '<prefix><gray>Modules (<white><count></white>):'
+    # <state>: ENABLED, DISABLED, FAILED...
+    list-entry: '<dark_gray> - </dark_gray><white><module></white> <dark_gray>[</dark_gray><state><dark_gray>]</dark_gray>'
+    unknown: '<prefix><red>Unknown module <white><module></white>.'
+    enabled: '<prefix><green>Module <white><module></white> enabled.'
+    disabled: '<prefix><yellow>Module <white><module></white> disabled.'
+    reloaded: '<prefix><green>Module <white><module></white> reloaded.'
+    failed: '<prefix><red>Module <white><module></white> failed: <white><error></white>.'
+  help:
+    - '<accent><bold>SealCore</bold></accent> <dark_gray>-</dark_gray> <gray><version>'
+    - '<white>/sealcore reload</white> <dark_gray>-</dark_gray> <gray>reload configs and languages'
+    - '<white>/sealcore module list|enable|disable|reload <id></white>'
+    - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
+
+economy:
+  unknown-currency: '<prefix><red>Unknown currency <white><currency></white>.'
+  balance:
+    # <currency> name, <amount> formatted balance
+    self-header: '<prefix><gray>Your balance:'
+    other-header: '<prefix><gray><white><player></white>''s balance:'
+    entry: '<dark_gray> - </dark_gray><gray><currency>: <accent><amount>'
+  pay:
+    sent: '<prefix><gray>You sent <accent><amount></accent> to <white><player></white>.'
+    received: '<prefix><gray>You received <accent><amount></accent> from <white><player></white>.'
+    not-enough: '<prefix><red>You do not have enough. Balance: <white><balance></white>.'
+    self: '<prefix><red>You cannot pay yourself.'
+    out-of-range: '<prefix><red>Amount must be between <white><min></white> and <white><max></white>.'
+    cooldown: '<prefix><red>Wait <white><seconds>s</white> before paying again.'
+    currency-not-allowed: '<prefix><red>You cannot send <white><currency></white>.'
+    failed: '<prefix><red>The payment failed. You were not charged.'
+  baltop:
+    header: '<prefix><gray>Top <accent><currency></accent> <dark_gray>(page <page>/<pages>)'
+    entry: '<dark_gray>#<position></dark_gray> <white><player></white> <dark_gray>-</dark_gray> <accent><amount>'
+    empty: '<prefix><gray>The leaderboard is empty.'
+    unavailable: '<prefix><red>The leaderboard is disabled in ExcellentEconomy.'

@@ -1,0 +1,9 @@
+.gradle/
+build/
+run/
+run-folia/
+out/
+.idea/
+*.iml
+.vscode/
+.DS_Store

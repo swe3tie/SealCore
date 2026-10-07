@@ -1,0 +1,68 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ SealCore - all-in-one Economy SMP plugin                     │
+# ╰──────────────────────────────────────────────────────────────╯
+# This file holds engine settings and things shared by several modules.
+# Settings for a single module live in modules/<module_id>.yml.
+# Every player-facing message lives in languages/<language_id>.yml.
+#
+# Missing keys are restored from the defaults on startup and on reload, and
+# your own values and comments are kept. Keys marked [restart] only apply
+# after a full server restart.
+
+# Do not touch. Used to migrate this file between SealCore versions.
+config-version: 1
+
+# Language file under languages/. en.yml is the fallback for any key missing
+# from the selected file, so a partial translation shows English, not blanks.
+lang: en.yml
+
+general:
+  # Hex colour used by the <accent> MiniMessage tag in every language file.
+  accent-color: '#9CC0D9'
+  # Extra logging for troubleshooting.
+  debug: false
+
+storage:
+  # [restart] sqlite or mysql (MariaDB works with mysql).
+  type: sqlite
+  # SQLite file, relative to plugins/SealCore/data/.
+  file: sealcore.db
+  # MySQL settings, ignored for sqlite.
+  host: localhost
+  port: 3306
+  database: sealcore
+  username: root
+  password: ''
+  use-ssl: false
+  # Prefix for every SealCore table, useful when sharing a database.
+  table-prefix: 'sealcore_'
+  pool:
+    maximum-size: 10
+    minimum-idle: 2
+    connection-timeout-ms: 10000
+    max-lifetime-ms: 1800000
+
+hooks:
+  excellent-economy:
+    # Refuse to enable SealCore when ExcellentEconomy is missing, instead of
+    # just disabling modules that need it. Recommended in production.
+    required: false
+    # SealCore currency keys mapped onto ExcellentEconomy currency ids.
+    # Modules always refer to the keys on the left.
+    currencies:
+      money: money
+      shards: shards
+      coins: coins
+    # Used when a feature does not name a currency.
+    default-currency: money
+  placeholderapi:
+    # Parse PlaceholderAPI placeholders inside SealCore messages.
+    parse-in-messages: true
+  packetevents:
+    # Packet based features (holograms, packet scoreboards...). [restart]
+    enabled: true
+
+# Turn whole modules on or off. Fine-grained options and submodules live in
+# modules/<module_id>.yml. Toggling here applies on /sealcore reload.
+modules:
+  economy: true
