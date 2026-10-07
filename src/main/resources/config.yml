@@ -64,5 +64,6 @@ hooks:
 
 # Turn whole modules on or off. Fine-grained options and submodules live in
 # modules/<module_id>.yml. Toggling here applies on /sealcore reload.
-modules:
-  economy: true
+# Example:
+#   module_id: true
+modules: {}
