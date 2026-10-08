@@ -1,37 +1,151 @@
 # SealCore - English (fallback for every other language)
 # Format: MiniMessage - https://docs.advntr.dev/minimessage/format.html
-#   <accent>     colour from config.yml general.accent-color
-#   <prefix>     the prefix below
-#   <name>       per-message placeholders, listed next to each message
-# A message may be a single string or a list of lines. Set it to '' to hide it.
-# PlaceholderAPI placeholders (%...%) work when the hook is enabled.
+#
+# Built-in tags:
+#   <accent>           Theme colour configured in config.yml (general.accent-color)
+#   </accent>          Closing accent tag
+#
+# Placeholders are formatted as: {PLACEHOLDER_NAME}
+# Specific placeholders are listed and explained before each message section.
+# Set any message to '' to hide it completely.
 
 config-version: 1
 
-prefix: '<accent><bold>SealCore</bold></accent> <dark_gray>»</dark_gray> '
-
+# ──────────────────────────────────────────────────────────────
+# SECTION 1: CORE SYSTEM MESSAGES
+# ──────────────────────────────────────────────────────────────
 core:
-  no-permission: '<prefix><red>You do not have permission to do that.'
-  players-only: '<prefix><red>Only players can use this.'
-  player-not-found: '<prefix><red>Player <white><player></white> was not found.'
-  invalid-number: '<prefix><red><input> is not a valid amount.'
-  module-disabled: '<prefix><red>This feature is currently disabled.'
-  hook-missing: '<prefix><red>This feature needs <white><hook></white>, which is not installed.'
+  # Shown when a player lacks permission to run a command.
+  no-permission: '<red>You do not have permission to do that.'
+
+  # Shown when console runs a player-only command.
+  players-only: '<red>Only players can use this command.'
+
+  # Shown when target player is not found.
+  # Placeholders:
+  #   {PLAYER} - Target player name
+  player-not-found: '<red>Player <white>{PLAYER}</white> was not found.'
+
+  # Shown when input is not a valid number.
+  # Placeholders:
+  #   {INPUT} - Raw string input
+  invalid-number: '<red><white>{INPUT}</white> is not a valid amount.'
+
+  # Shown when the requested feature or module is disabled.
+  module-disabled: '<red>This feature is currently disabled.'
+
+  # Shown when a required plugin dependency is missing.
+  # Placeholders:
+  #   {HOOK} - Missing plugin name
+  hook-missing: '<red>This feature needs <white>{HOOK}</white>, which is not installed.'
+
+  # Command usage feedback shown on actionbar with villager no sound on invalid syntax.
+  # Placeholders:
+  #   {USAGE} - Command usage syntax (e.g. /pay <player> <amount>)
+  command-usage: '<red>Usage: <white>{USAGE}</white>'
+
+  # Plugin reload feedback (/sealcore reload).
   reload:
-    success: '<prefix><green>Reloaded in <white><time>ms</white>.'
-    failed: '<prefix><red>Reload failed: <white><error></white>. Check the console.'
-  version: '<prefix><gray>Running <accent>SealCore <version></accent> on <white><server></white>.'
+    # Placeholders: {TIME} - Reload duration in milliseconds
+    success: '<green>Reloaded in <white>{TIME}ms</white>.'
+    # Placeholders: {ERROR} - Error message if reload failed
+    failed: '<red>Reload failed: <white>{ERROR}</white>. Check the console.'
+
+  # Plugin version feedback (/sealcore version).
+  # Placeholders:
+  #   {VERSION} - SealCore version
+  #   {SERVER}  - Server brand and Minecraft version
+  version: '<gray>Running <accent>SealCore {VERSION}</accent> on <white>{SERVER}</white>.'
+
+  # Module administration feedback (/sealcore module).
   module:
-    list-header: '<prefix><gray>Modules (<white><count></white>):'
-    # <state>: ENABLED, DISABLED, FAILED...
-    list-entry: '<dark_gray> - </dark_gray><white><module></white> <dark_gray>[</dark_gray><state><dark_gray>]</dark_gray>'
-    unknown: '<prefix><red>Unknown module <white><module></white>.'
-    enabled: '<prefix><green>Module <white><module></white> enabled.'
-    disabled: '<prefix><yellow>Module <white><module></white> disabled.'
-    reloaded: '<prefix><green>Module <white><module></white> reloaded.'
-    failed: '<prefix><red>Module <white><module></white> failed: <white><error></white>.'
+    # Placeholders: {COUNT} - Total number of modules
+    list-header: '<gray>Modules (<white>{COUNT}</white>):'
+    # Placeholders: {MODULE} - Module id; {STATE} - Status (ENABLED, DISABLED, FAILED...)
+    list-entry: '<dark_gray> - </dark_gray><white>{MODULE}</white> <dark_gray>[</dark_gray>{STATE}<dark_gray>]</dark_gray>'
+    # Placeholders: {MODULE} - Unknown module id
+    unknown: '<red>Unknown module <white>{MODULE}</white>.'
+    # Placeholders: {MODULE} - Enabled module id
+    enabled: '<green>Module <white>{MODULE}</white> enabled.'
+    # Placeholders: {MODULE} - Disabled module id
+    disabled: '<yellow>Module <white>{MODULE}</white> disabled.'
+    # Placeholders: {MODULE} - Reloaded module id
+    reloaded: '<green>Module <white>{MODULE}</white> reloaded.'
+    # Placeholders: {MODULE} - Module id; {ERROR} - Error message
+    failed: '<red>Module <white>{MODULE}</white> failed: <white>{ERROR}</white>.'
+
+  # Help menu displayed by /sealcore.
+  # Placeholders: {VERSION} - Current plugin version
   help:
-    - '<accent><bold>SealCore</bold></accent> <dark_gray>-</dark_gray> <gray><version>'
-    - '<white>/sealcore reload</white> <dark_gray>-</dark_gray> <gray>reload configs and languages'
-    - '<white>/sealcore module list|enable|disable|reload <id></white>'
+    - '<accent><bold>SealCore</bold></accent> <dark_gray>-</dark_gray> <gray>{VERSION}</gray>'
+    - '<white>/sealcore reload</white> <dark_gray>-</dark_gray> <gray>reload configs and languages</gray>'
+    - '<white>/sealcore module list|enable|disable|reload <id></white> <dark_gray>-</dark_gray> <gray>manage modules</gray>'
     - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
+
+# ──────────────────────────────────────────────────────────────
+# SECTION 2: ECONOMY MODULE
+# ──────────────────────────────────────────────────────────────
+economy:
+  # Balance command (/balance or /bal).
+  balance:
+    # Self balance check.
+    # Placeholders:
+    #   {MONEY} - Formatted money balance (e.g. 1,234.56)
+    self: '<white>You have <green>${MONEY}</green>'
+
+    # Other player's balance check (/balance <player>).
+    # Placeholders:
+    #   {PLAYER} - Target player name
+    #   {MONEY}  - Target player's balance
+    other: '<accent>{PLAYER}</accent> <white>has <green>${MONEY}</green>'
+
+    # Shown when balance lookup fails.
+    failed: '<red>Could not load balance.'
+
+  # Pay command (/pay <player> <amount>).
+  pay:
+    # Sender chat feedback on successful payment.
+    # Placeholders:
+    #   {AMOUNT} - Sent amount formatted compactly (e.g. 69.77M)
+    #   {PLAYER} - Receiver player name
+    sender-chat: '<white>You sent <green>${AMOUNT}</green> <white>to <accent>{PLAYER}</accent>'
+
+    # Sender actionbar feedback on successful payment.
+    # Placeholders:
+    #   {AMOUNT} - Sent amount
+    #   {PLAYER} - Receiver player name
+    sender-actionbar: '<white>Sent <green>${AMOUNT}</green> <white>to <accent>{PLAYER}</accent>'
+
+    # Receiver chat feedback on received payment.
+    # Placeholders:
+    #   {AMOUNT} - Received amount
+    #   {PLAYER} - Sender player name
+    receiver-chat: '<accent>{PLAYER}</accent> <white>sent <green>${AMOUNT}</green> <white>to you'
+
+    # Receiver actionbar feedback on received payment.
+    # Placeholders:
+    #   {AMOUNT} - Received amount
+    #   {PLAYER} - Sender player name
+    receiver-actionbar: '<accent>{PLAYER}</accent> <white>Sent <green>${AMOUNT}</green>'
+
+    # Shown when sender has insufficient funds.
+    # Placeholders:
+    #   {BALANCE} - Current sender balance
+    not-enough: '<red>You do not have enough money. Balance: <green>${BALANCE}</green>'
+
+    # Shown when attempting to pay oneself.
+    self: '<red>You cannot send money to yourself.'
+
+    # Shown when the transaction failed.
+    failed: '<red>The payment failed. You were not charged.'
+
+    # Shown when sender is on cooldown.
+    # Placeholders:
+    #   {SECONDS} - Cooldown seconds remaining
+    cooldown: '<red>Wait <white>{SECONDS}s</white> before paying again.'
+
+    # Shown when payment amount is outside allowed bounds.
+    # Placeholders:
+    #   {MIN} - Minimum allowed amount
+    #   {MAX} - Maximum allowed amount
+    out-of-range: '<red>Amount must be between <green>${MIN}</green> <red>and <green>${MAX}</green>.'

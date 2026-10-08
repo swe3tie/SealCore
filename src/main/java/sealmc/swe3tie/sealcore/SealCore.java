@@ -13,6 +13,7 @@ import sealmc.swe3tie.sealcore.core.lang.LangService;
 import sealmc.swe3tie.sealcore.core.module.ModuleManager;
 import sealmc.swe3tie.sealcore.core.scheduler.SealScheduler;
 import sealmc.swe3tie.sealcore.core.storage.StorageService;
+import sealmc.swe3tie.sealcore.modules.economy.EconomyModule;
 import java.util.logging.Level;
 
 /** SealCore: all-in-one Economy SMP plugin for Paper and Folia. */
@@ -57,6 +58,7 @@ public final class SealCore extends JavaPlugin {
         new SealCommand(this).register(this.commands);
 
         this.modules = new ModuleManager(this);
+        this.modules.register(new EconomyModule(this));
         this.modules.freeze();
         this.modules.sync();
 

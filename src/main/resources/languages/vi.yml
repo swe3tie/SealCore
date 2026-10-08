@@ -1,27 +1,152 @@
 # SealCore - Tiếng Việt
-# Thiếu khóa nào sẽ tự dùng bản tiếng Anh (en.yml).
-# Định dạng: MiniMessage - https://docs.advntr.dev/minimessage/format.html
+# Thiếu khóa nào sẽ tự động dùng bản tiếng Anh (en.yml).
+# Định dạng màu sắc: MiniMessage - https://docs.advntr.dev/minimessage/format.html
+#
+# Các thẻ màu đặc biệt được hỗ trợ sẵn:
+#   <accent>           Màu chủ đạo cấu hình tại config.yml (general.accent-color)
+#   </accent>          Thẻ đóng màu chủ đạo
+#
+# Placeholder trong tin nhắn có dạng: {TÊN_PLACEHOLDER}
+# Các placeholder cụ thể được liệt kê và giải thích ngay trước mỗi mục tin nhắn.
+# Nếu muốn ẩn hoàn toàn một tin nhắn, hãy đặt giá trị thành rỗng: ''
 
 config-version: 1
 
-prefix: '<accent><bold>SealCore</bold></accent> <dark_gray>»</dark_gray> '
-
+# ──────────────────────────────────────────────────────────────
+# PHẦN 1: CÁC TIN NHẮN HỆ THỐNG CHUNG (CORE)
+# ──────────────────────────────────────────────────────────────
 core:
-  no-permission: '<prefix><red>Bạn không có quyền làm điều này.'
-  players-only: '<prefix><red>Chỉ người chơi mới dùng được lệnh này.'
-  player-not-found: '<prefix><red>Không tìm thấy người chơi <white><player></white>.'
-  invalid-number: '<prefix><red><input> không phải là số hợp lệ.'
-  module-disabled: '<prefix><red>Tính năng này đang tắt.'
-  hook-missing: '<prefix><red>Tính năng này cần <white><hook></white> nhưng chưa được cài.'
+  # Thông báo khi người chơi không có quyền thực hiện hành động.
+  no-permission: '<red>Bạn không có quyền làm điều này.'
+
+  # Thông báo khi console chạy lệnh chỉ dành riêng cho người chơi in-game.
+  players-only: '<red>Chỉ người chơi mới dùng được lệnh này.'
+
+  # Thông báo khi không tìm thấy người chơi mục tiêu.
+  # Placeholder:
+  #   {PLAYER} - Tên người chơi không tìm thấy
+  player-not-found: '<red>Không tìm thấy người chơi <white>{PLAYER}</white>.'
+
+  # Thông báo khi nhập số lượng không hợp lệ.
+  # Placeholder:
+  #   {INPUT} - Chuỗi người chơi đã nhập vào
+  invalid-number: '<red><white>{INPUT}</white> không phải là số hợp lệ.'
+
+  # Thông báo khi module/tính năng tương ứng đang bị tắt trong config.
+  module-disabled: '<red>Tính năng này đang tắt.'
+
+  # Thông báo khi tính năng cần một plugin phụ thuộc nhưng chưa được cài đặt trên server.
+  # Placeholder:
+  #   {HOOK} - Tên plugin phụ thuộc bị thiếu
+  hook-missing: '<red>Tính năng này cần <white>{HOOK}</white> nhưng chưa được cài.'
+
+  # Thông báo hướng dẫn cú pháp lệnh (hiển thị trên actionbar kèm âm thanh villager no khi gõ sai cú pháp).
+  # Placeholder:
+  #   {USAGE} - Cú pháp chuẩn của lệnh (ví dụ: /pay <player> <amount>)
+  command-usage: '<red>Cách dùng: <white>{USAGE}</white>'
+
+  # Thông báo reload plugin (/sealcore reload).
   reload:
-    success: '<prefix><green>Đã tải lại trong <white><time>ms</white>.'
-    failed: '<prefix><red>Tải lại thất bại: <white><error></white>. Xem console.'
-  version: '<prefix><gray>Đang chạy <accent>SealCore <version></accent> trên <white><server></white>.'
+    # Placeholder: {TIME} - Thời gian reload tính bằng mili-giây
+    success: '<green>Đã tải lại trong <white>{TIME}ms</white>.'
+    # Placeholder: {ERROR} - Chi tiết lỗi phát sinh khi tải lại
+    failed: '<red>Tải lại thất bại: <white>{ERROR}</white>. Xem console.'
+
+  # Thông báo phiên bản plugin (/sealcore version).
+  # Placeholder:
+  #   {VERSION} - Phiên bản plugin SealCore
+  #   {SERVER}  - Tên và phiên bản máy chủ Minecraft
+  version: '<gray>Đang chạy <accent>SealCore {VERSION}</accent> trên <white>{SERVER}</white>.'
+
+  # Thông báo quản lý module (/sealcore module).
   module:
-    list-header: '<prefix><gray>Mô-đun (<white><count></white>):'
-    list-entry: '<dark_gray> - </dark_gray><white><module></white> <dark_gray>[</dark_gray><state><dark_gray>]</dark_gray>'
-    unknown: '<prefix><red>Không có mô-đun <white><module></white>.'
-    enabled: '<prefix><green>Đã bật mô-đun <white><module></white>.'
-    disabled: '<prefix><yellow>Đã tắt mô-đun <white><module></white>.'
-    reloaded: '<prefix><green>Đã tải lại mô-đun <white><module></white>.'
-    failed: '<prefix><red>Mô-đun <white><module></white> lỗi: <white><error></white>.'
+    # Placeholder: {COUNT} - Tổng số lượng module
+    list-header: '<gray>Mô-đun (<white>{COUNT}</white>):'
+    # Placeholder: {MODULE} - ID của module; {STATE} - Trạng thái hoạt động (ENABLED, DISABLED, FAILED...)
+    list-entry: '<dark_gray> - </dark_gray><white>{MODULE}</white> <dark_gray>[</dark_gray>{STATE}<dark_gray>]</dark_gray>'
+    # Placeholder: {MODULE} - ID module không tồn tại
+    unknown: '<red>Không có mô-đun <white>{MODULE}</white>.'
+    # Placeholder: {MODULE} - ID module vừa được bật
+    enabled: '<green>Đã bật mô-đun <white>{MODULE}</white>.'
+    # Placeholder: {MODULE} - ID module vừa bị tắt
+    disabled: '<yellow>Đã tắt mô-đun <white>{MODULE}</white>.'
+    # Placeholder: {MODULE} - ID module vừa được tải lại
+    reloaded: '<green>Đã tải lại mô-đun <white>{MODULE}</white>.'
+    # Placeholder: {MODULE} - ID module; {ERROR} - Chi tiết lỗi
+    failed: '<red>Mô-đun <white>{MODULE}</white> lỗi: <white>{ERROR}</white>.'
+
+  # Menu trợ giúp hiển thị khi chạy /sealcore.
+  # Placeholder: {VERSION} - Phiên bản hiện tại của plugin
+  help:
+    - '<accent><bold>SealCore</bold></accent> <dark_gray>-</dark_gray> <gray>{VERSION}</gray>'
+    - '<white>/sealcore reload</white> <dark_gray>-</dark_gray> <gray>tải lại cấu hình và ngôn ngữ</gray>'
+    - '<white>/sealcore module list|enable|disable|reload <id></white> <dark_gray>-</dark_gray> <gray>quản lý các module</gray>'
+    - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
+
+# ──────────────────────────────────────────────────────────────
+# PHẦN 2: MODULE KINH TẾ (ECONOMY)
+# ──────────────────────────────────────────────────────────────
+economy:
+  # Lệnh xem số dư tài khoản (/balance hoặc /bal).
+  balance:
+    # Khi người chơi xem số dư của chính mình.
+    # Placeholder:
+    #   {MONEY} - Số tiền hiện có (định dạng chuẩn có dấu phẩy: $1,234.56)
+    self: '<white>Bạn có <green>${MONEY}</green>'
+
+    # Khi người chơi xem số dư của người khác (/balance <player>).
+    # Placeholder:
+    #   {PLAYER} - Tên người chơi được xem
+    #   {MONEY}  - Số tiền của người chơi đó
+    other: '<accent>{PLAYER}</accent> <white>có <green>${MONEY}</green>'
+
+    # Khi hệ thống không thể tải dữ liệu số dư từ backend.
+    failed: '<red>Không thể tải số dư.'
+
+  # Tính năng chuyển tiền giữa các người chơi (/pay <player> <amount>).
+  pay:
+    # Tin nhắn gửi vào khung chat của người gửi khi chuyển tiền thành công.
+    # Placeholder:
+    #   {AMOUNT} - Số tiền đã chuyển (dạng compact: 69.77M/B/T...)
+    #   {PLAYER} - Tên người nhận
+    sender-chat: '<white>Bạn đã gửi <green>${AMOUNT}</green> <white>tới <accent>{PLAYER}</accent>'
+
+    # Tin nhắn hiển thị trên thanh actionbar của người gửi khi chuyển tiền thành công.
+    # Placeholder:
+    #   {AMOUNT} - Số tiền đã chuyển
+    #   {PLAYER} - Tên người nhận
+    sender-actionbar: '<white>Gửi <green>${AMOUNT}</green> <white>tới <accent>{PLAYER}</accent>'
+
+    # Tin nhắn gửi vào khung chat của người nhận (khi đang online hoặc khi đăng nhập lại).
+    # Placeholder:
+    #   {AMOUNT} - Số tiền nhận được
+    #   {PLAYER} - Tên người gửi
+    receiver-chat: '<accent>{PLAYER}</accent> <white>đã gửi <green>${AMOUNT}</green> <white>tới bạn'
+
+    # Tin nhắn hiển thị trên thanh actionbar của người nhận (khi đang online hoặc khi đăng nhập lại).
+    # Placeholder:
+    #   {AMOUNT} - Số tiền nhận được
+    #   {PLAYER} - Tên người gửi
+    receiver-actionbar: '<accent>{PLAYER}</accent> <white>Gửi <green>${AMOUNT}</green>'
+
+    # Thông báo khi số dư của người gửi không đủ để thực hiện giao dịch.
+    # Placeholder:
+    #   {BALANCE} - Số dư hiện tại của người gửi
+    not-enough: '<red>Bạn không đủ tiền. Số dư: <green>${BALANCE}</green>'
+
+    # Thông báo khi người chơi tự chuyển tiền cho chính mình.
+    self: '<red>Bạn không thể tự chuyển cho mình.'
+
+    # Thông báo khi giao dịch gặp sự cố và bị hủy (tiền được hoàn lại đầy đủ).
+    failed: '<red>Giao dịch thất bại. Bạn chưa bị trừ tiền.'
+
+    # Thông báo khi người chơi bị giới hạn thời gian chờ (cooldown).
+    # Placeholder:
+    #   {SECONDS} - Số giây còn lại phải chờ
+    cooldown: '<red>Chờ <white>{SECONDS}s</white> trước khi chuyển tiếp.'
+
+    # Thông báo khi số tiền chuyển nằm ngoài phạm vi cho phép (min-amount / max-amount).
+    # Placeholder:
+    #   {MIN} - Số tiền tối thiểu
+    #   {MAX} - Số tiền tối đa
+    out-of-range: '<red>Số tiền phải từ <green>${MIN}</green> <red>đến <green>${MAX}</green>.'

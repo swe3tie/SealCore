@@ -34,8 +34,9 @@ import java.util.logging.Level;
  * Loads {@code languages/<lang>.yml} with {@code en.yml} as the fallback for every missing key,
  * and renders messages with MiniMessage.
  * <p>
- * Built-in tags: {@code <accent>} (colour from config.yml) and {@code <prefix>}. Callers add their
- * own placeholders as {@link TagResolver}s. Rendering and sending are thread-safe.
+ * Built-in tags: {@code <accent>}. Callers add placeholders as {@link TagResolver}s.
+ * Placeholders can be formatted as {@code {NAME}} or {@code <name>} in messages.
+ * Rendering and sending are thread-safe.
  */
 public final class LangService {
 
@@ -91,12 +92,9 @@ public final class LangService {
 
         String accentHex = settings.accentColor().asHexString();
         TagResolver accent = TagResolver.resolver("accent", Tag.styling(style -> style.color(settings.accentColor())));
-        Map<String, List<String>> selectedMessages = flatten(selected);
-        String prefixRaw = first(selectedMessages.get("prefix"), first(fallbackMessages.get("prefix"), ""));
-        Component prefix = MINI.deserialize(prefixRaw, accent);
-        TagResolver builtins = TagResolver.resolver(accent, Placeholder.component("prefix", prefix),
-            Placeholder.parsed("accent_hex", accentHex));
+        TagResolver builtins = TagResolver.resolver(accent, Placeholder.parsed("accent_hex", accentHex));
 
+        Map<String, List<String>> selectedMessages = flatten(selected);
         this.snapshot = new Snapshot(selectedMessages, fallbackMessages, builtins, settings.parsePlaceholdersInMessages());
     }
 
@@ -115,6 +113,44 @@ public final class LangService {
         return s.selected.containsKey(key) || s.fallback.containsKey(key);
     }
 
+    /**
+     * Replaces curly-brace placeholders {@code {NAME}} with MiniMessage tags {@code <name>}
+     * so templates can use {@code {PLAYER}}, {@code {AMOUNT}}, etc.
+     */
+    @NotNull
+    private static String convertBraces(@NotNull String text) {
+        int len = text.length();
+        int openIdx = text.indexOf('{');
+        if (openIdx < 0) return text;
+
+        StringBuilder sb = new StringBuilder(len + 16);
+        int cursor = 0;
+        while (openIdx >= 0) {
+            int closeIdx = text.indexOf('}', openIdx + 1);
+            if (closeIdx < 0) break;
+
+            sb.append(text, cursor, openIdx);
+            String inner = text.substring(openIdx + 1, closeIdx);
+            if (!inner.isEmpty() && isTagIdentifier(inner)) {
+                sb.append('<').append(inner.toLowerCase(java.util.Locale.ROOT)).append('>');
+            } else {
+                sb.append('{').append(inner).append('}');
+            }
+            cursor = closeIdx + 1;
+            openIdx = text.indexOf('{', cursor);
+        }
+        sb.append(text, cursor, len);
+        return sb.toString();
+    }
+
+    private static boolean isTagIdentifier(String s) {
+        for (int i = 0; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (!Character.isLetterOrDigit(c) && c != '_' && c != '-') return false;
+        }
+        return true;
+    }
+
     /** Renders a message into components, one per line. Empty messages yield an empty list. */
     @NotNull
     public List<Component> render(@NotNull String key, @Nullable Audience viewer, @NotNull TagResolver... resolvers) {
@@ -124,8 +160,8 @@ public final class LangService {
         Snapshot s = this.snapshot;
         TagResolver all = TagResolver.resolver(TagResolver.resolver(resolvers), s.builtins);
         List<Component> out = new ArrayList<>(lines.size());
-        for (String line : lines) {
-            String text = line;
+        for (String rawLine : lines) {
+            String text = convertBraces(rawLine);
             if (s.parsePlaceholders && viewer instanceof Player player && text.indexOf('%') >= 0) {
                 text = this.placeholderParser.apply(player, text);
             }
@@ -144,10 +180,11 @@ public final class LangService {
     @NotNull
     public Component parse(@NotNull String text, @Nullable Audience viewer, @NotNull TagResolver... resolvers) {
         Snapshot s = this.snapshot;
-        if (s.parsePlaceholders && viewer instanceof Player player && text.indexOf('%') >= 0) {
-            text = this.placeholderParser.apply(player, text);
+        String processed = convertBraces(text);
+        if (s.parsePlaceholders && viewer instanceof Player player && processed.indexOf('%') >= 0) {
+            processed = this.placeholderParser.apply(player, processed);
         }
-        return MINI.deserialize(text, TagResolver.resolver(TagResolver.resolver(resolvers), s.builtins));
+        return MINI.deserialize(processed, TagResolver.resolver(TagResolver.resolver(resolvers), s.builtins));
     }
 
     public void send(@NotNull CommandSender sender, @NotNull String key, @NotNull TagResolver... resolvers) {
@@ -184,9 +221,5 @@ public final class LangService {
             }
         }
         return out;
-    }
-
-    private static String first(@Nullable List<String> lines, String def) {
-        return lines == null || lines.isEmpty() ? def : String.join("\n", lines);
     }
 }

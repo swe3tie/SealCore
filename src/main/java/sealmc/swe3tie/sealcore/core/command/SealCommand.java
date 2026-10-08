@@ -44,6 +44,10 @@ public final class SealCommand {
     private LiteralArgumentBuilder<CommandSourceStack> moduleNode() {
         return Commands.literal("module")
             .requires(s -> s.getSender().hasPermission(BASE + ".module"))
+            .executes(ctx -> {
+                CommandUsage.send(this.core.lang(), ctx.getSource().getSender(), "/sealcore module <list|enable|disable|reload> [id]");
+                return 0;
+            })
             .then(Commands.literal("list").executes(ctx -> this.listModules(ctx.getSource().getSender())))
             .then(this.moduleAction("enable", this::enableModule))
             .then(this.moduleAction("disable", this::disableModule))
@@ -51,7 +55,12 @@ public final class SealCommand {
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> moduleAction(String name, ModuleAction action) {
-        return Commands.literal(name).then(Commands.argument("module", StringArgumentType.word())
+        return Commands.literal(name)
+            .executes(ctx -> {
+                CommandUsage.send(this.core.lang(), ctx.getSource().getSender(), "/sealcore module " + name + " <id>");
+                return 0;
+            })
+            .then(Commands.argument("module", StringArgumentType.word())
             .suggests((ctx, builder) -> {
                 this.core.modules().all().forEach(m -> {
                     if (m.id().startsWith(builder.getRemainingLowerCase())) builder.suggest(m.id());

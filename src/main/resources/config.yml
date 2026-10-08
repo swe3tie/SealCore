@@ -1,69 +1,78 @@
 # ╭──────────────────────────────────────────────────────────────╮
 # │ SealCore - all-in-one Economy SMP plugin                     │
 # ╰──────────────────────────────────────────────────────────────╯
-# This file holds engine settings and things shared by several modules.
-# Settings for a single module live in modules/<module_id>.yml.
-# Every player-facing message lives in languages/<language_id>.yml.
+# File cấu hình trung tâm của SealCore, quản lý các thiết lập chung của engine,
+# kết nối cơ sở dữ liệu và tích hợp các plugin bên ngoài.
 #
-# Missing keys are restored from the defaults on startup and on reload, and
-# your own values and comments are kept. Keys marked [restart] only apply
-# after a full server restart.
+# Cấu hình riêng cho từng module nằm tại: modules/<module_id>.yml
+# Toàn bộ thông báo tin nhắn tới người chơi nằm tại: languages/<language_id>.yml
+#
+# Các khóa bị thiếu sẽ được tự động khôi phục từ bản mặc định khi khởi động/reload,
+# giữ nguyên giá trị và chú thích của bạn.
+# Các khóa có đánh dấu [restart] chỉ có hiệu lực sau khi khởi động lại hoàn toàn server.
 
-# Do not touch. Used to migrate this file between SealCore versions.
+# Phiên bản cấu hình - không tự ý chỉnh sửa. Dùng cho việc tự động migrate giữa các phiên bản.
 config-version: 1
 
-# Language file under languages/. en.yml is the fallback for any key missing
-# from the selected file, so a partial translation shows English, not blanks.
+# Tên file ngôn ngữ kích hoạt trong thư mục languages/.
+# en.yml là ngôn ngữ dự phòng (fallback) cho bất kỳ khóa nào thiếu trong file này.
 lang: en.yml
 
+# Cài đặt chung của hệ thống.
 general:
-  # Hex colour used by the <accent> MiniMessage tag in every language file.
+  # Màu chủ đạo (hex) dùng cho tag MiniMessage <accent> trong toàn bộ hệ thống ngôn ngữ.
   accent-color: '#9CC0D9'
-  # Extra logging for troubleshooting.
+  # Bật ghi log chi tiết phục vụ kiểm tra lỗi (debug).
   debug: false
 
+# Cấu hình lưu trữ dữ liệu SQL (SQLite hoặc MySQL/MariaDB).
 storage:
-  # [restart] sqlite or mysql (MariaDB works with mysql).
+  # [restart] Loại database: sqlite hoặc mysql (MariaDB dùng chung tùy chọn mysql).
   type: sqlite
-  # SQLite file, relative to plugins/SealCore/data/.
+  # Tên file SQLite, lưu tương đối trong thư mục plugins/SealCore/data/.
   file: sealcore.db
-  # MySQL settings, ignored for sqlite.
+  # Cấu hình kết nối MySQL (bỏ qua nếu type là sqlite).
   host: localhost
   port: 3306
   database: sealcore
   username: root
   password: ''
   use-ssl: false
-  # Prefix for every SealCore table, useful when sharing a database.
+  # Tiền tố cho các bảng của SealCore trong database (tránh trùng lặp khi dùng chung DB).
   table-prefix: 'sealcore_'
+  # Cấu hình HikariCP Connection Pool.
   pool:
     maximum-size: 10
     minimum-idle: 2
     connection-timeout-ms: 10000
     max-lifetime-ms: 1800000
 
+# Tích hợp với các plugin bên ngoài (Hooks).
 hooks:
+  # Tích hợp kinh tế với ExcellentEconomy.
   excellent-economy:
-    # Refuse to enable SealCore when ExcellentEconomy is missing, instead of
-    # just disabling modules that need it. Recommended in production.
+    # Nếu true: SealCore sẽ từ chối khởi động nếu thiếu ExcellentEconomy.
+    # Khuyến nghị bật true trên server chính thức (production).
     required: false
-    # SealCore currency keys mapped onto ExcellentEconomy currency ids.
-    # Modules always refer to the keys on the left.
+    # Ánh xạ mã tiền tệ của SealCore sang ID tiền tệ trong ExcellentEconomy.
+    # Các module của SealCore luôn tham chiếu theo khóa bên trái.
     currencies:
       money: money
       shards: shards
       coins: coins
-    # Used when a feature does not name a currency.
+    # Loại tiền tệ mặc định khi lệnh/tính năng không chỉ định loại tiền.
     default-currency: money
+  # Tích hợp phân giải placeholder PlaceholderAPI (%...%).
   placeholderapi:
-    # Parse PlaceholderAPI placeholders inside SealCore messages.
+    # Tự động parse PlaceholderAPI trong các tin nhắn gửi tới người chơi.
     parse-in-messages: true
+  # Tích hợp PacketEvents cho các tính năng can thiệp gói tin (hologram, scoreboard...).
   packetevents:
-    # Packet based features (holograms, packet scoreboards...). [restart]
+    # [restart] Bật/tắt hook PacketEvents.
     enabled: true
 
-# Turn whole modules on or off. Fine-grained options and submodules live in
-# modules/<module_id>.yml. Toggling here applies on /sealcore reload.
-# Example:
-#   module_id: true
-modules: {}
+# Bật/tắt các module tính năng của plugin.
+# Các tùy chọn chi tiết của từng module nằm tại: modules/<module_id>.yml
+# Thay đổi tại đây có hiệu lực ngay sau khi chạy /sealcore reload.
+modules:
+  economy: true
