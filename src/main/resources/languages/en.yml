@@ -1,9 +1,7 @@
 # SealCore - English (fallback for every other language)
 # Format: MiniMessage - https://docs.advntr.dev/minimessage/format.html
 #
-# Built-in tags:
-#   <accent>           Theme colour configured in config.yml (general.accent-color)
-#   </accent>          Closing accent tag
+# Primary color: <#9CC0D9>
 #
 # Placeholders are formatted as: {PLACEHOLDER_NAME}
 # Specific placeholders are listed and explained before each message section.
@@ -22,62 +20,50 @@ core:
   players-only: '<red>Only players can use this command.'
 
   # Shown when target player is not found.
-  # Placeholders:
-  #   {PLAYER} - Target player name
+  # Placeholder: {PLAYER} - Target player name
   player-not-found: '<red>Player <white>{PLAYER}</white> was not found.'
 
   # Shown when input is not a valid number.
-  # Placeholders:
-  #   {INPUT} - Raw string input
+  # Placeholder: {INPUT} - Raw string input
   invalid-number: '<red><white>{INPUT}</white> is not a valid amount.'
 
   # Shown when the requested feature or module is disabled.
   module-disabled: '<red>This feature is currently disabled.'
 
   # Shown when a required plugin dependency is missing.
-  # Placeholders:
-  #   {HOOK} - Missing plugin name
+  # Placeholder: {HOOK} - Missing plugin name
   hook-missing: '<red>This feature needs <white>{HOOK}</white>, which is not installed.'
 
   # Command usage feedback shown on actionbar with villager no sound on invalid syntax.
-  # Placeholders:
-  #   {USAGE} - Command usage syntax (e.g. /pay <player> <amount>)
+  # Placeholder: {USAGE} - Command usage syntax (e.g. /pay <player> <amount>)
   command-usage: '<red>Usage: <white>{USAGE}</white>'
 
   # Plugin reload feedback (/sealcore reload).
   reload:
-    # Placeholders: {TIME} - Reload duration in milliseconds
+    # Placeholder: {TIME} - Reload duration in milliseconds
     success: '<green>Reloaded in <white>{TIME}ms</white>.'
-    # Placeholders: {ERROR} - Error message if reload failed
+    # Placeholder: {ERROR} - Error message if reload failed
     failed: '<red>Reload failed: <white>{ERROR}</white>. Check the console.'
 
   # Plugin version feedback (/sealcore version).
-  # Placeholders:
-  #   {VERSION} - SealCore version
-  #   {SERVER}  - Server brand and Minecraft version
-  version: '<gray>Running <accent>SealCore {VERSION}</accent> on <white>{SERVER}</white>.'
+  # Placeholder: {VERSION} - SealCore version; {SERVER} - Server brand and Minecraft version
+  version: '<gray>Running <#9CC0D9>SealCore {VERSION}</#9CC0D9> on <white>{SERVER}</white>.'
 
   # Module administration feedback (/sealcore module).
+  # Placeholder: {COUNT} - Total number of modules; {MODULE} - Module id; {STATE} - Status; {ERROR} - Error message
   module:
-    # Placeholders: {COUNT} - Total number of modules
     list-header: '<gray>Modules (<white>{COUNT}</white>):'
-    # Placeholders: {MODULE} - Module id; {STATE} - Status (ENABLED, DISABLED, FAILED...)
     list-entry: '<dark_gray> - </dark_gray><white>{MODULE}</white> <dark_gray>[</dark_gray>{STATE}<dark_gray>]</dark_gray>'
-    # Placeholders: {MODULE} - Unknown module id
     unknown: '<red>Unknown module <white>{MODULE}</white>.'
-    # Placeholders: {MODULE} - Enabled module id
     enabled: '<green>Module <white>{MODULE}</white> enabled.'
-    # Placeholders: {MODULE} - Disabled module id
     disabled: '<yellow>Module <white>{MODULE}</white> disabled.'
-    # Placeholders: {MODULE} - Reloaded module id
     reloaded: '<green>Module <white>{MODULE}</white> reloaded.'
-    # Placeholders: {MODULE} - Module id; {ERROR} - Error message
     failed: '<red>Module <white>{MODULE}</white> failed: <white>{ERROR}</white>.'
 
   # Help menu displayed by /sealcore.
-  # Placeholders: {VERSION} - Current plugin version
+  # Placeholder: {VERSION} - Current plugin version
   help:
-    - '<accent><bold>SealCore</bold></accent> <dark_gray>-</dark_gray> <gray>{VERSION}</gray>'
+    - '<#9CC0D9><bold>SealCore</bold></#9CC0D9> <dark_gray>-</dark_gray> <gray>{VERSION}</gray>'
     - '<white>/sealcore reload</white> <dark_gray>-</dark_gray> <gray>reload configs and languages</gray>'
     - '<white>/sealcore module list|enable|disable|reload <id></white> <dark_gray>-</dark_gray> <gray>manage modules</gray>'
     - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
@@ -88,64 +74,29 @@ core:
 economy:
   # Balance command (/balance or /bal).
   balance:
-    # Self balance check.
-    # Placeholders:
-    #   {MONEY} - Formatted money balance (e.g. 1,234.56)
+    # Placeholder: {MONEY} - Formatted money balance (e.g. 1,234.56)
     self: '<white>You have <green>${MONEY}</green>'
-
-    # Other player's balance check (/balance <player>).
-    # Placeholders:
-    #   {PLAYER} - Target player name
-    #   {MONEY}  - Target player's balance
-    other: '<accent>{PLAYER}</accent> <white>has <green>${MONEY}</green>'
-
-    # Shown when balance lookup fails.
+    # Placeholder: {PLAYER} - Target player name; {MONEY} - Target player's balance
+    other: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>has <green>${MONEY}</green>'
     failed: '<red>Could not load balance.'
 
   # Pay command (/pay <player> <amount>).
+  # Placeholder: {AMOUNT} - Sent/received amount formatted compactly (e.g. 69.77M); {PLAYER} - Target player name
   pay:
-    # Sender chat feedback on successful payment.
-    # Placeholders:
-    #   {AMOUNT} - Sent amount formatted compactly (e.g. 69.77M)
-    #   {PLAYER} - Receiver player name
-    sender-chat: '<white>You sent <green>${AMOUNT}</green> <white>to <accent>{PLAYER}</accent>'
-
-    # Sender actionbar feedback on successful payment.
-    # Placeholders:
-    #   {AMOUNT} - Sent amount
-    #   {PLAYER} - Receiver player name
-    sender-actionbar: '<white>Sent <green>${AMOUNT}</green> <white>to <accent>{PLAYER}</accent>'
-
-    # Receiver chat feedback on received payment.
-    # Placeholders:
-    #   {AMOUNT} - Received amount
-    #   {PLAYER} - Sender player name
-    receiver-chat: '<accent>{PLAYER}</accent> <white>sent <green>${AMOUNT}</green> <white>to you'
-
-    # Receiver actionbar feedback on received payment.
-    # Placeholders:
-    #   {AMOUNT} - Received amount
-    #   {PLAYER} - Sender player name
-    receiver-actionbar: '<accent>{PLAYER}</accent> <white>Sent <green>${AMOUNT}</green>'
-
+    sender:
+      chat: '<white>You sent <green>${AMOUNT}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
+      actionbar: '<white>Sent <green>${AMOUNT}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
+    receiver:
+      chat: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT}</green> <white>to you'
+      actionbar: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>Sent <green>${AMOUNT}</green>'
+      offline: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT}</green> <white>to you while you were offline'
     # Shown when sender has insufficient funds.
-    # Placeholders:
-    #   {BALANCE} - Current sender balance
-    not-enough: '<red>You do not have enough money. Balance: <green>${BALANCE}</green>'
-
+    not-enough: '<red>You do not have enough money.'
     # Shown when attempting to pay oneself.
     self: '<red>You cannot send money to yourself.'
-
     # Shown when the transaction failed.
     failed: '<red>The payment failed. You were not charged.'
-
-    # Shown when sender is on cooldown.
-    # Placeholders:
-    #   {SECONDS} - Cooldown seconds remaining
+    # Placeholder: {SECONDS} - Cooldown seconds remaining
     cooldown: '<red>Wait <white>{SECONDS}s</white> before paying again.'
-
-    # Shown when payment amount is outside allowed bounds.
-    # Placeholders:
-    #   {MIN} - Minimum allowed amount
-    #   {MAX} - Maximum allowed amount
+    # Placeholder: {MIN} - Minimum allowed amount; {MAX} - Maximum allowed amount
     out-of-range: '<red>Amount must be between <green>${MIN}</green> <red>and <green>${MAX}</green>.'

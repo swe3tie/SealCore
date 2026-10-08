@@ -178,10 +178,10 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
 
                     // Sender feedback: Chat and Actionbar
                     scheduler.entity(sender, () -> {
-                        lang.send(sender, "economy.pay.sender-chat",
+                        lang.send(sender, "economy.pay.sender.chat",
                             Placeholder.unparsed("amount", formatted),
                             Placeholder.unparsed("player", targetName));
-                        sender.sendActionBar(lang.component("economy.pay.sender-actionbar", sender,
+                        sender.sendActionBar(lang.component("economy.pay.sender.actionbar", sender,
                             Placeholder.unparsed("amount", formatted),
                             Placeholder.unparsed("player", targetName)));
                     });
@@ -190,10 +190,10 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
                     Player target = Bukkit.getPlayer(targetId);
                     if (target != null && target.isOnline()) {
                         scheduler.entity(target, () -> {
-                            lang.send(target, "economy.pay.receiver-chat",
+                            lang.send(target, "economy.pay.receiver.chat",
                                 Placeholder.unparsed("amount", formatted),
                                 Placeholder.unparsed("player", senderName));
-                            target.sendActionBar(lang.component("economy.pay.receiver-actionbar", target,
+                            target.sendActionBar(lang.component("economy.pay.receiver.actionbar", target,
                                 Placeholder.unparsed("amount", formatted),
                                 Placeholder.unparsed("player", senderName)));
                         });
@@ -214,11 +214,7 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
                 }
                 case NOT_ENOUGH -> {
                     this.cooldowns.remove(senderId);
-                    scheduler.entity(sender, () -> {
-                        double bal = currency.balance(sender, key);
-                        lang.send(sender, "economy.pay.not-enough",
-                            Placeholder.unparsed("balance", MoneyFormat.formatStandard(bal)));
-                    });
+                    scheduler.entity(sender, () -> lang.send(sender, "economy.pay.not-enough"));
                 }
                 case FAILED -> {
                     this.cooldowns.remove(senderId);

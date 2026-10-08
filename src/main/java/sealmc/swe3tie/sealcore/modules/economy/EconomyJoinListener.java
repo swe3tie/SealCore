@@ -61,13 +61,17 @@ public final class EconomyJoinListener implements Listener {
             this.module.core().scheduler().entityLater(player, () -> {
                 if (!player.isOnline()) return;
                 var lang = this.module.core().lang();
+                String chatKey = lang.has("economy.pay.receiver.offline")
+                    ? "economy.pay.receiver.offline"
+                    : "economy.pay.receiver.chat";
+
                 for (Notification n : notifications) {
                     String formatted = MoneyFormat.formatCompact(n.amount());
-                    lang.send(player, "economy.pay.receiver-chat",
+                    lang.send(player, chatKey,
                         Placeholder.unparsed("player", n.senderName()),
                         Placeholder.unparsed("amount", formatted));
 
-                    player.sendActionBar(lang.component("economy.pay.receiver-actionbar", player,
+                    player.sendActionBar(lang.component("economy.pay.receiver.actionbar", player,
                         Placeholder.unparsed("player", n.senderName()),
                         Placeholder.unparsed("amount", formatted)));
                 }
