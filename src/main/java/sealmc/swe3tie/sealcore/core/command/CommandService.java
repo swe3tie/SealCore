@@ -4,6 +4,12 @@ import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.SealCore;
@@ -39,6 +45,7 @@ public final class CommandService {
 
     /** Hooks the lifecycle event. Call once from onEnable, before modules are enabled. */
     public void install() {
+        this.core.getServer().getPluginManager().registerEvents(new CommandHideListener(), this.core);
         this.core.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             Commands registrar = event.registrar();
             for (Entry entry : this.pending) {
@@ -68,5 +75,25 @@ public final class CommandService {
             return;
         }
         this.pending.add(new Entry(node, description, List.copyOf(aliases)));
+    }
+
+    private final class CommandHideListener implements Listener {
+        @EventHandler(priority = EventPriority.HIGHEST)
+        public void onCommandSend(PlayerCommandSendEvent event) {
+            Player player = event.getPlayer();
+            if (player.isOp() || player.hasPermission("sealcore.admin")) return;
+            event.getCommands().removeIf(cmd -> cmd.regionMatches(true, 0, "sealcore:", 0, 9));
+        }
+
+        @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+        public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
+            Player player = event.getPlayer();
+            if (player.isOp() || player.hasPermission("sealcore.admin")) return;
+            String msg = event.getMessage();
+            if (msg.length() > 9 && msg.regionMatches(true, 1, "sealcore:", 0, 9)) {
+                event.setCancelled(true);
+                core.lang().send(player, "core.no-permission");
+            }
+        }
     }
 }

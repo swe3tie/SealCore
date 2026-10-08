@@ -34,3 +34,16 @@ permissions:
       sealcore.command.reload: true
       sealcore.command.module: true
       sealcore.command.debug: true
+      sealcore.economy.pay.bypass: true
+  sealcore.economy.pay:
+    description: Allow sending money via /pay.
+    default: true
+  sealcore.economy.balance:
+    description: Allow viewing own balance via /balance or /bal.
+    default: true
+  sealcore.economy.balance.others:
+    description: Allow viewing other players balances via /balance <player>.
+    default: true
+  sealcore.economy.pay.bypass:
+    description: Bypass cooldown and transaction limits for /pay.
+    default: op
