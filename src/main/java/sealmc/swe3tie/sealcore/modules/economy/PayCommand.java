@@ -14,7 +14,6 @@ import org.jetbrains.annotations.NotNull;
 import sealmc.swe3tie.sealcore.core.command.CommandUsage;
 import sealmc.swe3tie.sealcore.core.hook.Hook;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
-import sealmc.swe3tie.sealcore.core.module.SealSubmodule;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.sql.PreparedStatement;
@@ -25,25 +24,25 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** {@code /pay <player> <amount>} sends money to an online or offline player. */
-public final class PaySubmodule extends SealSubmodule<EconomyModule> {
+public final class PayCommand {
 
     private static final String USAGE = "/pay <player> <amount>";
+    private final EconomyModule module;
     private final Map<UUID, Long> cooldowns = new ConcurrentHashMap<>();
 
-    public PaySubmodule(@NotNull EconomyModule parent) {
-        super(parent, "pay");
+    public PayCommand(@NotNull EconomyModule module) {
+        this.module = module;
     }
 
-    @Override
-    protected void onEnable() {
-        var command = this.settings().getConfigurationSection("command");
-        String name = command != null ? command.getString("name", "pay") : "pay";
-        List<String> aliases = command != null ? command.getStringList("aliases") : List.of();
-        String permission = command != null ? command.getString("permission", "sealcore.economy.pay") : "sealcore.economy.pay";
+    public void register() {
+        var section = this.module.config().getConfigurationSection("commands.pay");
+        String name = section != null ? section.getString("name", "pay") : "pay";
+        List<String> aliases = section != null ? section.getStringList("aliases") : List.of();
+        String permission = section != null ? section.getString("permission", "sealcore.economy.pay") : "sealcore.economy.pay";
 
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(name)
             .executes(ctx -> {
-                CommandUsage.send(this.parent.core().lang(), ctx.getSource().getSender(), USAGE);
+                CommandUsage.send(this.module.core().lang(), ctx.getSource().getSender(), USAGE);
                 return 0;
             })
             .then(Commands.argument("player", StringArgumentType.word())
@@ -56,29 +55,28 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
                     return builder.buildFuture();
                 })
                 .executes(ctx -> {
-                    CommandUsage.send(this.parent.core().lang(), ctx.getSource().getSender(), USAGE);
+                    CommandUsage.send(this.module.core().lang(), ctx.getSource().getSender(), USAGE);
                     return 0;
                 })
                 .then(Commands.argument("amount", StringArgumentType.word())
                     .executes(this::executePay)
                     .then(Commands.argument("extra", StringArgumentType.greedyString())
                         .executes(ctx -> {
-                            CommandUsage.send(this.parent.core().lang(), ctx.getSource().getSender(), USAGE);
+                            CommandUsage.send(this.module.core().lang(), ctx.getSource().getSender(), USAGE);
                             return 0;
                         }))));
 
-        this.parent.core().commands().register(() -> this.parent.isActive() && this.isEnabled(), root,
+        this.module.core().commands().register(this.module::isActive, root,
             "Send money to a player", aliases, permission);
     }
 
-    @Override
-    protected void onDisable() {
+    public void clearCooldowns() {
         this.cooldowns.clear();
     }
 
     private int executePay(CommandContext<CommandSourceStack> ctx) {
         CommandSender sender = ctx.getSource().getSender();
-        var lang = this.parent.core().lang();
+        var lang = this.module.core().lang();
 
         if (!(sender instanceof Player playerSender)) {
             lang.send(sender, "core.players-only");
@@ -94,7 +92,7 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
             return 0;
         }
 
-        CurrencyService currency = this.parent.currency();
+        CurrencyService currency = this.module.currency();
         if (currency == null) {
             lang.send(playerSender, "core.hook-missing", Placeholder.unparsed("hook", Hook.ECONOMY.pluginName()));
             return 0;
@@ -105,11 +103,11 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
             return 0;
         }
 
-        var settings = this.settings();
-        boolean bypass = playerSender.hasPermission(settings.getString("bypass-permission", "sealcore.economy.pay.bypass"));
+        var section = this.module.config().getConfigurationSection("commands.pay");
+        boolean bypass = section != null && playerSender.hasPermission(section.getString("bypass-permission", "sealcore.economy.pay.bypass"));
 
-        double min = settings.getDouble("min-amount", 1D);
-        double max = settings.getDouble("max-amount", 1_000_000_000D);
+        double min = section != null ? section.getDouble("min-amount", 1D) : 1D;
+        double max = section != null ? section.getDouble("max-amount", 1_000_000_000D) : 1_000_000_000D;
         if (!bypass && (amount < min || amount > max)) {
             lang.send(playerSender, "economy.pay.out-of-range",
                 Placeholder.unparsed("min", MoneyFormat.formatStandard(min)),
@@ -118,7 +116,7 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
         }
 
         long now = System.currentTimeMillis();
-        long cooldownMs = settings.getLong("cooldown-seconds", 3L) * 1000L;
+        long cooldownMs = (section != null ? section.getLong("cooldown-seconds", 3L) : 3L) * 1000L;
         if (!bypass && cooldownMs > 0L) {
             Long last = this.cooldowns.get(playerSender.getUniqueId());
             if (last != null && now - last < cooldownMs) {
@@ -136,13 +134,13 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
         }
 
         // Offline player lookup asynchronously
-        this.parent.core().scheduler().async(() -> {
+        this.module.core().scheduler().async(() -> {
             OfflinePlayer offline = Bukkit.getOfflinePlayerIfCached(targetName);
             if (offline == null || (!offline.hasPlayedBefore() && !offline.isOnline())) {
                 offline = Bukkit.getOfflinePlayer(targetName);
             }
             if (offline == null || (!offline.hasPlayedBefore() && !offline.isOnline())) {
-                this.parent.core().scheduler().entity(playerSender, () -> {
+                this.module.core().scheduler().entity(playerSender, () -> {
                     this.cooldowns.remove(playerSender.getUniqueId());
                     lang.send(playerSender, "core.player-not-found", Placeholder.unparsed("player", targetName));
                 });
@@ -160,8 +158,8 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
     private void processTransfer(Player sender, UUID targetId, String targetName, boolean isOnline,
                                  double amount, CurrencyService currency) {
         String key = "money";
-        var lang = this.parent.core().lang();
-        var scheduler = this.parent.core().scheduler();
+        var lang = this.module.core().lang();
+        var scheduler = this.module.core().scheduler();
         String senderName = sender.getName();
         UUID senderId = sender.getUniqueId();
 
@@ -199,8 +197,8 @@ public final class PaySubmodule extends SealSubmodule<EconomyModule> {
                         });
                     } else {
                         // Persist offline notification
-                        String table = this.parent.core().storage().table("economy_notifications");
-                        this.parent.core().storage().execute(connection -> {
+                        String table = this.module.core().storage().table("economy_notifications");
+                        this.module.core().storage().execute(connection -> {
                             String sql = "INSERT INTO " + table + " (receiver_uuid, sender_name, amount, created_at) VALUES (?, ?, ?, ?)";
                             try (PreparedStatement ps = connection.prepareStatement(sql)) {
                                 ps.setString(1, targetId.toString());

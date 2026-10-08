@@ -100,3 +100,11 @@ economy:
     cooldown: '<red>Wait <white>{SECONDS}s</white> before paying again.'
     # Placeholder: {MIN} - Minimum allowed amount; {MAX} - Maximum allowed amount
     out-of-range: '<red>Amount must be between <green>${MIN}</green> <red>and <green>${MAX}</green>.'
+
+  # Sell GUI command (/sell).
+  # Placeholder: {TOTAL} - Total sell value; {MONEY} - Total money received
+  sell:
+    title: '<#9CC0D9>ѕᴇʟʟ ɪᴛᴇᴍѕ</#9CC0D9><dark_gray>:</dark_gray> <green>${TOTAL}</green>'
+    sold:
+      chat: '<green>+${MONEY}</green>'
+      actionbar: '<green>+${MONEY}</green>'

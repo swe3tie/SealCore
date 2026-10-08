@@ -1,14 +1,14 @@
 # ╭──────────────────────────────────────────────────────────────╮
 # │ Module: economy                                              │
 # ╰──────────────────────────────────────────────────────────────╯
-# Quản lý số dư (/balance) và chuyển tiền (/pay) kết nối qua ExcellentEconomy.
+# Quản lý số dư (/balance), chuyển tiền (/pay) và bán đồ (/sell) kết nối qua ExcellentEconomy.
 # Bật/tắt toàn bộ module tại mục modules.economy trong file config.yml.
 # Các thông báo tin nhắn tương ứng nằm ở phần "economy" trong file ngôn ngữ (languages/).
 
 # Phiên bản cấu hình - không tự ý thay đổi.
 config-version: 1
 
-# Cấu hình các lệnh chính của module economy.
+# Cấu hình các lệnh của module economy.
 # [restart] Thay đổi tên lệnh (name) và bí danh (aliases) cần khởi động lại server.
 commands:
   # Lệnh xem số dư tài khoản.
@@ -20,17 +20,11 @@ commands:
     # Quyền xem số dư người chơi khác (/balance <player>).
     other-permission: sealcore.economy.balance.others
 
-# Cấu hình các tính năng con (submodules).
-submodules:
-  # Tính năng chuyển tiền giữa các người chơi.
+  # Lệnh chuyển tiền giữa các người chơi.
   pay:
-    # Bật/tắt tính năng /pay.
-    enabled: true
-    # Lệnh chuyển tiền.
-    command:
-      name: pay
-      aliases: []
-      permission: sealcore.economy.pay
+    name: pay
+    aliases: []
+    permission: sealcore.economy.pay
     # Số tiền tối thiểu cho một lần chuyển (người có quyền bypass sẽ bỏ qua).
     min-amount: 1
     # Số tiền tối đa cho một lần chuyển.
@@ -39,3 +33,23 @@ submodules:
     cooldown-seconds: 3
     # Quyền bỏ qua giới hạn số tiền và thời gian chờ.
     bypass-permission: sealcore.economy.pay.bypass
+
+  # Lệnh bán vật phẩm qua giao diện GUI (/sell).
+  sell:
+    name: sell
+    aliases: []
+    permission: sealcore.economy.sell
+
+# Bảng giá bán vật phẩm (tính theo 1 đơn vị/item).
+# Vật phẩm không có trong danh sách sẽ không thể bán và được trả lại túi đồ khi đóng GUI.
+prices:
+  DIAMOND: 100
+  EMERALD: 50
+  GOLD_INGOT: 20
+  IRON_INGOT: 10
+  COPPER_INGOT: 5
+  COAL: 2
+  WHEAT: 18
+  CARROT: 16
+  POTATO: 16
+  NETHERITE_INGOT: 500

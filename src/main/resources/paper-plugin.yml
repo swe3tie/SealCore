@@ -35,6 +35,7 @@ permissions:
       sealcore.command.module: true
       sealcore.command.debug: true
       sealcore.economy.pay.bypass: true
+      sealcore.economy.sell: true
   sealcore.economy.pay:
     description: Allow sending money via /pay.
     default: true
@@ -43,6 +44,9 @@ permissions:
     default: true
   sealcore.economy.balance.others:
     description: Allow viewing other players balances via /balance <player>.
+    default: true
+  sealcore.economy.sell:
+    description: Allow selling items via /sell.
     default: true
   sealcore.economy.pay.bypass:
     description: Bypass cooldown and transaction limits for /pay.

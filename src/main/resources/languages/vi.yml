@@ -101,3 +101,11 @@ economy:
     cooldown: '<red>Chờ <white>{SECONDS}s</white> trước khi chuyển tiếp.'
     # Placeholder: {MIN} - Số tiền tối thiểu; {MAX} - Số tiền tối đa
     out-of-range: '<red>Số tiền phải từ <green>${MIN}</green> <red>đến <green>${MAX}</green>.'
+
+  # Lệnh bán vật phẩm qua giao diện GUI (/sell).
+  # Placeholder: {TOTAL} - Tổng giá tiền của item bán được; {MONEY} - Số tiền nhận được
+  sell:
+    title: '<#9CC0D9>ʙáɴ ᴠậᴛ ᴘʜẩᴍ</#9CC0D9><dark_gray>:</dark_gray> <green>${TOTAL}</green>'
+    sold:
+      chat: '<green>+${MONEY}</green>'
+      actionbar: '<green>+${MONEY}</green>'
