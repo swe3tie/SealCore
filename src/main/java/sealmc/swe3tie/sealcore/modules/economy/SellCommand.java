@@ -5,6 +5,7 @@ import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
@@ -20,17 +21,16 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import sealmc.swe3tie.sealcore.core.hook.Hook;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
+import sealmc.swe3tie.sealcore.modules.economy.gui.SellGuiConfig;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellInventoryHolder;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-/** {@code /sell} opens a 5-row inventory GUI to sell items. */
+/** {@code /sell} opens a configurable inventory GUI to sell items. */
 public final class SellCommand implements Listener {
 
-    private static final int GUI_SIZE = 45;
     private final EconomyModule module;
 
     public SellCommand(@NotNull EconomyModule module) {
@@ -70,13 +70,29 @@ public final class SellCommand implements Listener {
             return 0;
         }
 
-        SellInventoryHolder holder = new SellInventoryHolder(player);
-        Component title = this.buildTitle(player, 0D);
-        Inventory inv = Bukkit.createInventory(holder, GUI_SIZE, title);
-        holder.setInventory(inv);
+        SellGuiConfig gui = this.module.guiConfig();
+        SellInventoryHolder holder = new SellInventoryHolder(player, gui.sellSlots());
+        Inventory inventory = Bukkit.createInventory(holder, gui.size(), this.buildTitle(player, 0D));
+        holder.setInventory(inventory);
+        this.placeConfiguredItems(player, inventory, gui);
 
-        player.openInventory(inv);
+        player.openInventory(inventory);
         return 1;
+    }
+
+    private void placeConfiguredItems(Player player, Inventory inventory, SellGuiConfig gui) {
+        for (SellGuiConfig.ItemDefinition definition : gui.items()) {
+            ItemStack item = definition.createItem(player, this.module.core().lang());
+            for (int slot : definition.slots()) inventory.setItem(slot, item.clone());
+        }
+    }
+
+    private boolean isTopInventorySlot(InventoryView view, int rawSlot) {
+        return rawSlot >= 0 && rawSlot < view.getTopInventory().getSize();
+    }
+
+    private void protectBottomInventoryClick(InventoryClickEvent event) {
+        if (event.getClick().isKeyboardClick()) event.setCancelled(true);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -84,7 +100,16 @@ public final class SellCommand implements Listener {
         if (!(event.getView().getTopInventory().getHolder() instanceof SellInventoryHolder holder)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        this.scheduleTitleUpdate(player, event.getView(), holder.getInventory());
+        int rawSlot = event.getRawSlot();
+        if (this.isTopInventorySlot(event.getView(), rawSlot)) {
+            if (!holder.isSellSlot(rawSlot)) {
+                event.setCancelled(true);
+                return;
+            }
+        } else {
+            this.protectBottomInventoryClick(event);
+        }
+        this.scheduleTitleUpdate(player, event.getView(), holder);
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -92,14 +117,22 @@ public final class SellCommand implements Listener {
         if (!(event.getView().getTopInventory().getHolder() instanceof SellInventoryHolder holder)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
-        this.scheduleTitleUpdate(player, event.getView(), holder.getInventory());
+        int topSize = event.getView().getTopInventory().getSize();
+        for (int rawSlot : event.getRawSlots()) {
+            if (rawSlot < topSize && !holder.isSellSlot(rawSlot)) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+        this.scheduleTitleUpdate(player, event.getView(), holder);
     }
 
-    private void scheduleTitleUpdate(Player player, InventoryView view, Inventory inventory) {
+    @SuppressWarnings("deprecation")
+    private void scheduleTitleUpdate(Player player, InventoryView view, SellInventoryHolder holder) {
         this.module.core().scheduler().entityLater(player, () -> {
             if (player.getOpenInventory() != view) return;
-            double total = this.module.priceService().calculateTotal(inventory);
-            view.setTitle(this.buildTitle(player, total));
+            double total = this.module.priceService().calculateTotal(holder.getInventory(), holder.sellSlots());
+            view.setTitle(LegacyComponentSerializer.legacySection().serialize(this.buildTitle(player, total)));
         }, null, 1L);
     }
 
@@ -107,55 +140,60 @@ public final class SellCommand implements Listener {
     public void onInventoryClose(InventoryCloseEvent event) {
         if (!(event.getInventory().getHolder() instanceof SellInventoryHolder holder)) return;
         Player player = holder.player();
-        Inventory inv = event.getInventory();
+        Inventory inventory = event.getInventory();
 
         double total = 0D;
         List<ItemStack> unsellable = new ArrayList<>();
-
-        for (int i = 0; i < inv.getSize(); i++) {
-            ItemStack stack = inv.getItem(i);
+        for (int slot : holder.sellSlots()) {
+            ItemStack stack = inventory.getItem(slot);
             if (stack == null || stack.isEmpty() || stack.getType().isAir()) continue;
+            inventory.setItem(slot, null);
 
-            double unit = this.module.priceService().getUnitPrice(stack.getType());
-            if (unit > 0D) {
-                total += unit * stack.getAmount();
-                inv.setItem(i, null);
-            } else {
-                unsellable.add(stack);
-                inv.setItem(i, null);
-            }
+            double itemTotal = this.module.priceService().getItemPrice(stack);
+            if (itemTotal > 0D) total += itemTotal;
+            else unsellable.add(stack);
         }
 
-        // Return unsellable items to player
         for (ItemStack item : unsellable) {
-            Map<Integer, ItemStack> leftover = player.getInventory().addItem(item);
+            var leftover = player.getInventory().addItem(item);
             for (ItemStack drop : leftover.values()) {
                 player.getWorld().dropItemNaturally(player.getLocation(), drop);
             }
         }
 
-        if (total <= 0D) return;
-
-        double finalTotal = total;
+        if (!(total > 0D)) return;
         CurrencyService currency = this.module.currency();
         if (currency == null) return;
 
+        double finalTotal = total;
         currency.deposit(player.getUniqueId(), "money", finalTotal, "sell").whenComplete((success, err) -> {
             if (err != null || !Boolean.TRUE.equals(success)) return;
 
             this.module.core().scheduler().entity(player, () -> {
+                String unformatted = MoneyFormat.formatStandard(finalTotal);
                 String formatted = MoneyFormat.formatCompact(finalTotal);
                 var lang = this.module.core().lang();
-                lang.send(player, "economy.sell.sold.chat", Placeholder.unparsed("money", formatted));
+                lang.send(player, "economy.sell.sold.chat",
+                    Placeholder.unparsed("money", unformatted),
+                    Placeholder.unparsed("money_formatted", formatted),
+                    Placeholder.unparsed("total", unformatted),
+                    Placeholder.unparsed("total_formatted", formatted));
                 player.sendActionBar(lang.component("economy.sell.sold.actionbar", player,
-                    Placeholder.unparsed("money", formatted)));
+                    Placeholder.unparsed("money", unformatted),
+                    Placeholder.unparsed("money_formatted", formatted),
+                    Placeholder.unparsed("total", unformatted),
+                    Placeholder.unparsed("total_formatted", formatted)));
             });
         });
     }
 
     private Component buildTitle(Player player, double total) {
+        String unformatted = MoneyFormat.formatStandard(total);
         String formatted = MoneyFormat.formatCompact(total);
-        return this.module.core().lang().component("economy.sell.title", player,
-            Placeholder.unparsed("total", formatted));
+        return this.module.core().lang().parse(this.module.guiConfig().title(), player,
+            Placeholder.unparsed("total", unformatted),
+            Placeholder.unparsed("total_formatted", formatted),
+            Placeholder.unparsed("money", unformatted),
+            Placeholder.unparsed("money_formatted", formatted));
     }
 }

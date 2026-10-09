@@ -70,8 +70,13 @@ public final class BalanceCommand {
         }
 
         double balance = currency.balance(player, "money");
-        String formatted = MoneyFormat.formatStandard(balance);
-        this.module.core().lang().send(sender, "economy.balance.self", Placeholder.unparsed("money", formatted));
+        String unformatted = MoneyFormat.formatStandard(balance);
+        String formatted = MoneyFormat.formatCompact(balance);
+        this.module.core().lang().send(sender, "economy.balance.self",
+            Placeholder.unparsed("money", unformatted),
+            Placeholder.unparsed("money_formatted", formatted),
+            Placeholder.unparsed("balance", unformatted),
+            Placeholder.unparsed("balance_formatted", formatted));
         return 1;
     }
 
@@ -88,10 +93,14 @@ public final class BalanceCommand {
         Player onlineTarget = Bukkit.getPlayerExact(targetName);
         if (onlineTarget != null) {
             double bal = currency.balance(onlineTarget, "money");
-            String formatted = MoneyFormat.formatStandard(bal);
+            String unformatted = MoneyFormat.formatStandard(bal);
+            String formatted = MoneyFormat.formatCompact(bal);
             this.module.core().lang().send(sender, "economy.balance.other",
                 Placeholder.unparsed("player", onlineTarget.getName()),
-                Placeholder.unparsed("money", formatted));
+                Placeholder.unparsed("money", unformatted),
+                Placeholder.unparsed("money_formatted", formatted),
+                Placeholder.unparsed("balance", unformatted),
+                Placeholder.unparsed("balance_formatted", formatted));
             return 1;
         }
 
@@ -113,11 +122,15 @@ public final class BalanceCommand {
                     this.runOnSender(sender, () -> this.module.core().lang().send(sender, "economy.balance.failed"));
                     return;
                 }
-                String formatted = MoneyFormat.formatStandard(bal);
+                String unformatted = MoneyFormat.formatStandard(bal);
+                String formatted = MoneyFormat.formatCompact(bal);
                 this.runOnSender(sender, () -> {
                     this.module.core().lang().send(sender, "economy.balance.other",
                         Placeholder.unparsed("player", finalName),
-                        Placeholder.unparsed("money", formatted));
+                        Placeholder.unparsed("money", unformatted),
+                        Placeholder.unparsed("money_formatted", formatted),
+                        Placeholder.unparsed("balance", unformatted),
+                        Placeholder.unparsed("balance_formatted", formatted));
                 });
             });
         });

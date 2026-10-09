@@ -1,4 +1,6 @@
-# SealCore - Tiếng Việt
+# ╭──────────────────────────────────────────────────────────────╮
+# │                    SealCore - Tiếng Việt                     │
+# ╰──────────────────────────────────────────────────────────────╯
 # Thiếu khóa nào sẽ tự động dùng bản tiếng Anh (en.yml).
 # Định dạng màu sắc: MiniMessage - https://docs.advntr.dev/minimessage/format.html
 #
@@ -10,9 +12,9 @@
 
 config-version: 1
 
-# ──────────────────────────────────────────────────────────────
-# PHẦN 1: CÁC TIN NHẮN HỆ THỐNG CHUNG (CORE)
-# ──────────────────────────────────────────────────────────────
+# ╭──────────────────────────────────────────────────────────────╮
+# │             Các tin nhắn hệ thống chung (Core)              │
+# ╰──────────────────────────────────────────────────────────────╯
 core:
   # Thông báo khi người chơi không có quyền thực hiện hành động.
   no-permission: '<red>Bạn không có quyền làm điều này.'
@@ -69,28 +71,28 @@ core:
     - '<white>/sealcore module list|enable|disable|reload <id></white> <dark_gray>-</dark_gray> <gray>quản lý các module</gray>'
     - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
 
-# ──────────────────────────────────────────────────────────────
-# PHẦN 2: MODULE KINH TẾ (ECONOMY)
-# ──────────────────────────────────────────────────────────────
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy                                              │
+# ╰──────────────────────────────────────────────────────────────╯
 economy:
   # Lệnh xem số dư tài khoản (/balance hoặc /bal).
   balance:
-    # Placeholder: {MONEY} - Số tiền hiện có ($1,234.56)
+    # Placeholder: {MONEY} - Số tiền dạng chuẩn (1,234.56); {MONEY_FORMATTED} - Dạng compact (69.77M)
     self: '<white>Bạn có <green>${MONEY}</green>'
-    # Placeholder: {PLAYER} - Tên người chơi; {MONEY} - Số tiền của người chơi
+    # Placeholder: {PLAYER} - Tên người chơi; {MONEY} - Số tiền dạng chuẩn; {MONEY_FORMATTED} - Dạng compact
     other: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>có <green>${MONEY}</green>'
     failed: '<red>Không thể tải số dư.'
 
   # Tính năng chuyển tiền giữa các người chơi (/pay <player> <amount>).
-  # Placeholder: {AMOUNT} - Số tiền dạng compact (69.77M); {PLAYER} - Tên người nhận/gửi
+  # Placeholder: {AMOUNT_FORMATTED} - Số tiền dạng compact (69.77M); {AMOUNT} - Dạng chuẩn (1,234.56); {PLAYER} - Tên người nhận/gửi
   pay:
     sender:
-      chat: '<white>Bạn đã gửi <green>${AMOUNT}</green> <white>tới <#9CC0D9>{PLAYER}</#9CC0D9>'
-      actionbar: '<white>Gửi <green>${AMOUNT}</green> <white>tới <#9CC0D9>{PLAYER}</#9CC0D9>'
+      chat: '<white>Bạn đã gửi <green>${AMOUNT_FORMATTED}</green> <white>tới <#9CC0D9>{PLAYER}</#9CC0D9>'
+      actionbar: '<white>Gửi <green>${AMOUNT_FORMATTED}</green> <white>tới <#9CC0D9>{PLAYER}</#9CC0D9>'
     receiver:
-      chat: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>đã gửi <green>${AMOUNT}</green> <white>tới bạn'
-      actionbar: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>Gửi <green>${AMOUNT}</green>'
-      offline: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>đã gửi <green>${AMOUNT}</green> <white>tới bạn trong lúc bạn vắng mặt'
+      chat: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>đã gửi <green>${AMOUNT_FORMATTED}</green> <white>tới bạn'
+      actionbar: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>Gửi <green>${AMOUNT_FORMATTED}</green>'
+      offline: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>đã gửi <green>${AMOUNT_FORMATTED}</green> <white>tới bạn trong lúc bạn vắng mặt'
     # Thông báo khi số dư của người gửi không đủ để thực hiện giao dịch.
     not-enough: '<red>Bạn không đủ tiền.'
     # Thông báo khi người chơi tự chuyển tiền cho chính mình.
@@ -102,10 +104,9 @@ economy:
     # Placeholder: {MIN} - Số tiền tối thiểu; {MAX} - Số tiền tối đa
     out-of-range: '<red>Số tiền phải từ <green>${MIN}</green> <red>đến <green>${MAX}</green>.'
 
-  # Lệnh bán vật phẩm qua giao diện GUI (/sell).
-  # Placeholder: {TOTAL} - Tổng giá tiền của item bán được; {MONEY} - Số tiền nhận được
+  # Lệnh bán vật phẩm qua giao diện GUI (/sell). Tiêu đề GUI nằm ở modules/economy/gui/sell.yml.
+  # Placeholder: {MONEY_FORMATTED} - Nhận được dạng compact; {MONEY} - Dạng chuẩn
   sell:
-    title: '<#9CC0D9>ʙáɴ ᴠậᴛ ᴘʜẩᴍ</#9CC0D9><dark_gray>:</dark_gray> <green>${TOTAL}</green>'
     sold:
-      chat: '<green>+${MONEY}</green>'
-      actionbar: '<green>+${MONEY}</green>'
+      chat: '<green>+${MONEY_FORMATTED}</green>'
+      actionbar: '<green>+${MONEY_FORMATTED}</green>'

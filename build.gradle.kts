@@ -90,6 +90,7 @@ tasks {
 
     test {
         useJUnitPlatform()
+        systemProperty("java.io.tmpdir", System.getProperty("java.io.tmpdir"))
     }
 
     // Optional local plugin jars for smoke tests: -PtestPlugins=/path/to/plugins

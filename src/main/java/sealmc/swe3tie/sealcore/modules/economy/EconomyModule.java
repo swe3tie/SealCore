@@ -6,9 +6,12 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.SealCore;
 import sealmc.swe3tie.sealcore.core.hook.Hook;
+import sealmc.swe3tie.sealcore.core.config.ConfigException;
+import sealmc.swe3tie.sealcore.core.config.YamlFile;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
 import sealmc.swe3tie.sealcore.core.module.SealModule;
 import sealmc.swe3tie.sealcore.core.storage.StorageService;
+import sealmc.swe3tie.sealcore.modules.economy.gui.SellGuiConfig;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.sql.Statement;
@@ -22,9 +25,12 @@ import java.util.Set;
 public final class EconomyModule extends SealModule {
 
     private final ItemPriceService priceService = new ItemPriceService();
+    private final YamlFile pricesFile = this.resolveFile("prices.yml");
+    private final YamlFile guiFile = this.resolveFile("gui/sell.yml");
     private final BalanceCommand balanceCommand = new BalanceCommand(this);
     private final PayCommand payCommand = new PayCommand(this);
     private final SellCommand sellCommand = new SellCommand(this);
+    private volatile SellGuiConfig guiConfig;
 
     public EconomyModule(@NotNull SealCore core) {
         super(core, "economy");
@@ -55,7 +61,7 @@ public final class EconomyModule extends SealModule {
             })
         ));
 
-        this.priceService.load(this.config().getConfigurationSection("prices"));
+        this.loadEconomyFiles();
 
         this.listen(new EconomyJoinListener(this));
         this.listen(this.sellCommand);
@@ -68,8 +74,13 @@ public final class EconomyModule extends SealModule {
     }
 
     @Override
-    protected void onReload() {
-        this.priceService.load(this.config().getConfigurationSection("prices"));
+    protected void onReload() throws Exception {
+        this.loadEconomyFiles();
+    }
+
+    private void loadEconomyFiles() throws ConfigException {
+        this.priceService.load(this.pricesFile.load().getConfigurationSection("prices"));
+        this.guiConfig = SellGuiConfig.load(this.guiFile.load());
     }
 
     @Override
@@ -81,6 +92,13 @@ public final class EconomyModule extends SealModule {
     @NotNull
     public ItemPriceService priceService() {
         return this.priceService;
+    }
+
+    @NotNull
+    public SellGuiConfig guiConfig() {
+        SellGuiConfig current = this.guiConfig;
+        if (current == null) throw new IllegalStateException("sell GUI config not loaded");
+        return current;
     }
 
     @Nullable
@@ -97,8 +115,8 @@ public final class EconomyModule extends SealModule {
         double balance = online != null ? currency.balance(online, "money") : 0D;
 
         return switch (params) {
-            case "balance" -> MoneyFormat.formatStandard(balance);
-            case "balance_compact" -> MoneyFormat.formatCompact(balance);
+            case "balance", "money" -> MoneyFormat.formatStandard(balance);
+            case "balance_compact", "balance_formatted", "money_formatted" -> MoneyFormat.formatCompact(balance);
             default -> null;
         };
     }

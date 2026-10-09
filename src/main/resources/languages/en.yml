@@ -1,4 +1,6 @@
-# SealCore - English (fallback for every other language)
+# ╭──────────────────────────────────────────────────────────────╮
+# │              SealCore - English (fallback)                  │
+# ╰──────────────────────────────────────────────────────────────╯
 # Format: MiniMessage - https://docs.advntr.dev/minimessage/format.html
 #
 # Primary color: <#9CC0D9>
@@ -7,11 +9,12 @@
 # Specific placeholders are listed and explained before each message section.
 # Set any message to '' to hide it completely.
 
+# ╭──────────────────────────────────────────────────────────────╮
+# │                 Core system messages                         │
+# ╰──────────────────────────────────────────────────────────────╯
+
 config-version: 1
 
-# ──────────────────────────────────────────────────────────────
-# SECTION 1: CORE SYSTEM MESSAGES
-# ──────────────────────────────────────────────────────────────
 core:
   # Shown when a player lacks permission to run a command.
   no-permission: '<red>You do not have permission to do that.'
@@ -68,28 +71,28 @@ core:
     - '<white>/sealcore module list|enable|disable|reload <id></white> <dark_gray>-</dark_gray> <gray>manage modules</gray>'
     - '<white>/sealcore version</white> <dark_gray>|</dark_gray> <white>/sealcore debug</white>'
 
-# ──────────────────────────────────────────────────────────────
-# SECTION 2: ECONOMY MODULE
-# ──────────────────────────────────────────────────────────────
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy                                              │
+# ╰──────────────────────────────────────────────────────────────╯
 economy:
   # Balance command (/balance or /bal).
   balance:
-    # Placeholder: {MONEY} - Formatted money balance (e.g. 1,234.56)
+    # Placeholder: {MONEY} - Standard balance (e.g. 1,234.56); {MONEY_FORMATTED} - Compact balance (e.g. 69.77M)
     self: '<white>You have <green>${MONEY}</green>'
-    # Placeholder: {PLAYER} - Target player name; {MONEY} - Target player's balance
+    # Placeholder: {PLAYER} - Target player name; {MONEY} - Standard balance; {MONEY_FORMATTED} - Compact balance
     other: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>has <green>${MONEY}</green>'
     failed: '<red>Could not load balance.'
 
   # Pay command (/pay <player> <amount>).
-  # Placeholder: {AMOUNT} - Sent/received amount formatted compactly (e.g. 69.77M); {PLAYER} - Target player name
+  # Placeholder: {AMOUNT_FORMATTED} - Sent/received compact amount (e.g. 69.77M); {AMOUNT} - Standard amount (e.g. 1,234.56); {PLAYER} - Target player name
   pay:
     sender:
-      chat: '<white>You sent <green>${AMOUNT}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
-      actionbar: '<white>Sent <green>${AMOUNT}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
+      chat: '<white>You sent <green>${AMOUNT_FORMATTED}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
+      actionbar: '<white>Sent <green>${AMOUNT_FORMATTED}</green> <white>to <#9CC0D9>{PLAYER}</#9CC0D9>'
     receiver:
-      chat: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT}</green> <white>to you'
-      actionbar: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>Sent <green>${AMOUNT}</green>'
-      offline: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT}</green> <white>to you while you were offline'
+      chat: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT_FORMATTED}</green> <white>to you'
+      actionbar: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>Sent <green>${AMOUNT_FORMATTED}</green>'
+      offline: '<#9CC0D9>{PLAYER}</#9CC0D9> <white>sent <green>${AMOUNT_FORMATTED}</green> <white>to you while you were offline'
     # Shown when sender has insufficient funds.
     not-enough: '<red>You do not have enough money.'
     # Shown when attempting to pay oneself.
@@ -101,10 +104,9 @@ economy:
     # Placeholder: {MIN} - Minimum allowed amount; {MAX} - Maximum allowed amount
     out-of-range: '<red>Amount must be between <green>${MIN}</green> <red>and <green>${MAX}</green>.'
 
-  # Sell GUI command (/sell).
-  # Placeholder: {TOTAL} - Total sell value; {MONEY} - Total money received
+  # Sell GUI command (/sell). GUI title is configured in modules/economy/gui/sell.yml.
+  # Placeholder: {MONEY_FORMATTED} - Compact money; {MONEY} - Standard money
   sell:
-    title: '<#9CC0D9>ѕᴇʟʟ ɪᴛᴇᴍѕ</#9CC0D9><dark_gray>:</dark_gray> <green>${TOTAL}</green>'
     sold:
-      chat: '<green>+${MONEY}</green>'
-      actionbar: '<green>+${MONEY}</green>'
+      chat: '<green>+${MONEY_FORMATTED}</green>'
+      actionbar: '<green>+${MONEY_FORMATTED}</green>'

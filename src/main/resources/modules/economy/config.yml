@@ -3,7 +3,7 @@
 # ╰──────────────────────────────────────────────────────────────╯
 # Quản lý số dư (/balance), chuyển tiền (/pay) và bán đồ (/sell) kết nối qua ExcellentEconomy.
 # Bật/tắt toàn bộ module tại mục modules.economy trong file config.yml.
-# Các thông báo tin nhắn tương ứng nằm ở phần "economy" trong file ngôn ngữ (languages/).
+# Tin nhắn nằm ở languages/, GUI và giá nằm trong thư mục module này.
 
 # Phiên bản cấu hình - không tự ý thay đổi.
 config-version: 1
@@ -39,17 +39,3 @@ commands:
     name: sell
     aliases: []
     permission: sealcore.economy.sell
-
-# Bảng giá bán vật phẩm (tính theo 1 đơn vị/item).
-# Vật phẩm không có trong danh sách sẽ không thể bán và được trả lại túi đồ khi đóng GUI.
-prices:
-  DIAMOND: 100
-  EMERALD: 50
-  GOLD_INGOT: 20
-  IRON_INGOT: 10
-  COPPER_INGOT: 5
-  COAL: 2
-  WHEAT: 18
-  CARROT: 16
-  POTATO: 16
-  NETHERITE_INGOT: 500

@@ -111,7 +111,9 @@ public final class PayCommand {
         if (!bypass && (amount < min || amount > max)) {
             lang.send(playerSender, "economy.pay.out-of-range",
                 Placeholder.unparsed("min", MoneyFormat.formatStandard(min)),
-                Placeholder.unparsed("max", MoneyFormat.formatStandard(max)));
+                Placeholder.unparsed("min_formatted", MoneyFormat.formatCompact(min)),
+                Placeholder.unparsed("max", MoneyFormat.formatStandard(max)),
+                Placeholder.unparsed("max_formatted", MoneyFormat.formatCompact(max)));
             return 0;
         }
 
@@ -172,15 +174,22 @@ public final class PayCommand {
 
             switch (result) {
                 case SUCCESS -> {
+                    String unformatted = MoneyFormat.formatStandard(amount);
                     String formatted = MoneyFormat.formatCompact(amount);
 
                     // Sender feedback: Chat and Actionbar
                     scheduler.entity(sender, () -> {
                         lang.send(sender, "economy.pay.sender.chat",
-                            Placeholder.unparsed("amount", formatted),
+                            Placeholder.unparsed("amount", unformatted),
+                            Placeholder.unparsed("amount_formatted", formatted),
+                            Placeholder.unparsed("money", unformatted),
+                            Placeholder.unparsed("money_formatted", formatted),
                             Placeholder.unparsed("player", targetName));
                         sender.sendActionBar(lang.component("economy.pay.sender.actionbar", sender,
-                            Placeholder.unparsed("amount", formatted),
+                            Placeholder.unparsed("amount", unformatted),
+                            Placeholder.unparsed("amount_formatted", formatted),
+                            Placeholder.unparsed("money", unformatted),
+                            Placeholder.unparsed("money_formatted", formatted),
                             Placeholder.unparsed("player", targetName)));
                     });
 
@@ -189,10 +198,16 @@ public final class PayCommand {
                     if (target != null && target.isOnline()) {
                         scheduler.entity(target, () -> {
                             lang.send(target, "economy.pay.receiver.chat",
-                                Placeholder.unparsed("amount", formatted),
+                                Placeholder.unparsed("amount", unformatted),
+                                Placeholder.unparsed("amount_formatted", formatted),
+                                Placeholder.unparsed("money", unformatted),
+                                Placeholder.unparsed("money_formatted", formatted),
                                 Placeholder.unparsed("player", senderName));
                             target.sendActionBar(lang.component("economy.pay.receiver.actionbar", target,
-                                Placeholder.unparsed("amount", formatted),
+                                Placeholder.unparsed("amount", unformatted),
+                                Placeholder.unparsed("amount_formatted", formatted),
+                                Placeholder.unparsed("money", unformatted),
+                                Placeholder.unparsed("money_formatted", formatted),
                                 Placeholder.unparsed("player", senderName)));
                         });
                     } else {

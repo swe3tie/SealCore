@@ -66,14 +66,21 @@ public final class EconomyJoinListener implements Listener {
                     : "economy.pay.receiver.chat";
 
                 for (Notification n : notifications) {
+                    String unformatted = MoneyFormat.formatStandard(n.amount());
                     String formatted = MoneyFormat.formatCompact(n.amount());
                     lang.send(player, chatKey,
                         Placeholder.unparsed("player", n.senderName()),
-                        Placeholder.unparsed("amount", formatted));
+                        Placeholder.unparsed("amount", unformatted),
+                        Placeholder.unparsed("amount_formatted", formatted),
+                        Placeholder.unparsed("money", unformatted),
+                        Placeholder.unparsed("money_formatted", formatted));
 
                     player.sendActionBar(lang.component("economy.pay.receiver.actionbar", player,
                         Placeholder.unparsed("player", n.senderName()),
-                        Placeholder.unparsed("amount", formatted)));
+                        Placeholder.unparsed("amount", unformatted),
+                        Placeholder.unparsed("amount_formatted", formatted),
+                        Placeholder.unparsed("money", unformatted),
+                        Placeholder.unparsed("money_formatted", formatted)));
                 }
             }, null, 20L);
         });
