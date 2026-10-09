@@ -3,7 +3,6 @@ package sealmc.swe3tie.sealcore.core.lang;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
-import net.kyori.adventure.text.minimessage.tag.Tag;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.minimessage.tag.resolver.TagResolver;
 import org.bukkit.command.CommandSender;
@@ -34,8 +33,8 @@ import java.util.logging.Level;
  * Loads {@code languages/<lang>.yml} with {@code en.yml} as the fallback for every missing key,
  * and renders messages with MiniMessage.
  * <p>
- * Built-in tags: {@code <accent>}. Callers add placeholders as {@link TagResolver}s.
- * Placeholders can be formatted as {@code {NAME}} or {@code <name>} in messages.
+ * Callers add placeholders as {@link TagResolver}s. Placeholders can be formatted as
+ * {@code {NAME}} or {@code <name>} in messages.
  * Rendering and sending are thread-safe.
  */
 public final class LangService {
@@ -90,9 +89,7 @@ public final class LangService {
         Map<String, List<String>> fallbackMessages = flatten(fallback);
         flatten(loadJarFallback()).forEach(fallbackMessages::putIfAbsent);
 
-        String accentHex = settings.accentColor().asHexString();
-        TagResolver accent = TagResolver.resolver("accent", Tag.styling(style -> style.color(settings.accentColor())));
-        TagResolver builtins = TagResolver.resolver(accent, Placeholder.parsed("accent_hex", accentHex));
+        TagResolver builtins = TagResolver.empty();
 
         Map<String, List<String>> selectedMessages = flatten(selected);
         this.snapshot = new Snapshot(selectedMessages, fallbackMessages, builtins, settings.parsePlaceholdersInMessages());

@@ -30,6 +30,7 @@ public final class EconomyModule extends SealModule {
     private final BalanceCommand balanceCommand = new BalanceCommand(this);
     private final PayCommand payCommand = new PayCommand(this);
     private final SellCommand sellCommand = new SellCommand(this);
+    private volatile ProgressStore progressStore;
     private volatile SellGuiConfig guiConfig;
 
     public EconomyModule(@NotNull SealCore core) {
@@ -58,8 +59,20 @@ public final class EconomyModule extends SealModule {
                         + "amount DOUBLE NOT NULL, "
                         + "created_at BIGINT NOT NULL)");
                 }
+            }),
+            new StorageService.Migration(2, (connection, storage) -> {
+                String table = storage.table("economy_sell_progress");
+                try (Statement st = connection.createStatement()) {
+                    st.executeUpdate("CREATE TABLE IF NOT EXISTS " + table + " ("
+                        + "player_uuid VARCHAR(36) NOT NULL, "
+                        + "category VARCHAR(32) NOT NULL, "
+                        + "paid DOUBLE NOT NULL, "
+                        + "PRIMARY KEY (player_uuid, category))");
+                }
             })
         ));
+        this.progressStore = new ProgressStore(this.core.storage());
+        this.sellCommand.setProgressStore(this.progressStore);
 
         this.loadEconomyFiles();
 
@@ -87,6 +100,16 @@ public final class EconomyModule extends SealModule {
     protected void onDisable() {
         this.sellCommand.closeAll();
         this.payCommand.clearCooldowns();
+        ProgressStore store = this.progressStore;
+        if (store != null) store.clear();
+        this.progressStore = null;
+    }
+
+    @NotNull
+    public ProgressStore progressStore() {
+        ProgressStore store = this.progressStore;
+        if (store == null) throw new IllegalStateException("progress store not loaded");
+        return store;
     }
 
     @NotNull

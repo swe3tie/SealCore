@@ -1,7 +1,5 @@
 package sealmc.swe3tie.sealcore.core.config;
 
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextColor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.jetbrains.annotations.NotNull;
@@ -14,7 +12,6 @@ import java.util.Map;
 /** Immutable snapshot of {@code config.yml}, rebuilt on every load. */
 public record CoreSettings(
     @NotNull String lang,
-    @NotNull TextColor accentColor,
     boolean debug,
     @NotNull StorageSettings storage,
     @NotNull EconomySettings economy,
@@ -55,9 +52,6 @@ public record CoreSettings(
         String lang = c.getString("lang", "en.yml");
         if (!lang.endsWith(".yml")) lang += ".yml";
 
-        TextColor accent = TextColor.fromHexString(c.getString("general.accent-color", "#9CC0D9"));
-        if (accent == null) accent = NamedTextColor.AQUA;
-
         StorageSettings storage = new StorageSettings(
             c.getString("storage.type", "sqlite").toLowerCase(Locale.ROOT),
             c.getString("storage.file", "sealcore.db"),
@@ -96,7 +90,6 @@ public record CoreSettings(
 
         return new CoreSettings(
             lang,
-            accent,
             c.getBoolean("general.debug", false),
             storage,
             economy,

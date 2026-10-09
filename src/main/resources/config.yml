@@ -4,7 +4,7 @@
 # File cấu hình trung tâm của SealCore, quản lý các thiết lập chung của engine,
 # kết nối cơ sở dữ liệu và tích hợp các plugin bên ngoài.
 #
-# Cấu hình riêng cho từng module nằm tại: modules/<module_id>.yml
+# Cấu hình riêng cho từng module nằm tại: modules/<module_id>/config.yml
 # Toàn bộ thông báo tin nhắn tới người chơi nằm tại: languages/<language_id>.yml
 #
 # Các khóa bị thiếu sẽ được tự động khôi phục từ bản mặc định khi khởi động/reload,
@@ -20,8 +20,6 @@ lang: en.yml
 
 # Cài đặt chung của hệ thống.
 general:
-  # Màu chủ đạo (hex) dùng cho tag MiniMessage <accent> trong toàn bộ hệ thống ngôn ngữ.
-  accent-color: '#9CC0D9'
   # Bật ghi log chi tiết phục vụ kiểm tra lỗi (debug).
   debug: false
 
@@ -72,7 +70,7 @@ hooks:
     enabled: true
 
 # Bật/tắt các module tính năng của plugin.
-# Các tùy chọn chi tiết của từng module nằm tại: modules/<module_id>.yml
+# Các tùy chọn chi tiết của từng module nằm tại: modules/<module_id>/config.yml
 # Thay đổi tại đây có hiệu lực ngay sau khi chạy /sealcore reload.
 modules:
   economy: true

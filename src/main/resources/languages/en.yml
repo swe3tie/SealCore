@@ -3,8 +3,6 @@
 # ╰──────────────────────────────────────────────────────────────╯
 # Format: MiniMessage - https://docs.advntr.dev/minimessage/format.html
 #
-# Primary color: <#9CC0D9>
-#
 # Placeholders are formatted as: {PLACEHOLDER_NAME}
 # Specific placeholders are listed and explained before each message section.
 # Set any message to '' to hide it completely.

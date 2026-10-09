@@ -1,147 +1,185 @@
 package sealmc.swe3tie.sealcore.modules.economy.gui;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
-import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
 import sealmc.swe3tie.sealcore.core.config.ConfigException;
 import sealmc.swe3tie.sealcore.core.lang.LangService;
+import sealmc.swe3tie.sealcore.modules.economy.SellCategory;
+import sealmc.swe3tie.sealcore.modules.economy.SellProgress;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.EnumMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-/** Immutable, validated configuration for the {@code /sell} inventory. */
+/** Immutable, validated configuration for sell and progression inventories. */
 public final class SellGuiConfig {
 
     private final String title;
     private final int rows;
     private final Set<Integer> sellSlots;
-    private final List<ItemDefinition> items;
+    private final Map<SellCategory, CategoryButton> categoryButtons;
+    private final ProgressConfig progress;
 
-    private SellGuiConfig(String title, int rows, Set<Integer> sellSlots, List<ItemDefinition> items) {
+    private SellGuiConfig(String title, int rows, Set<Integer> sellSlots,
+                          Map<SellCategory, CategoryButton> categoryButtons, ProgressConfig progress) {
         this.title = title;
         this.rows = rows;
         this.sellSlots = sellSlots;
-        this.items = items;
+        this.categoryButtons = categoryButtons;
+        this.progress = progress;
     }
 
     @NotNull
     public static SellGuiConfig load(@NotNull YamlConfiguration config) throws ConfigException {
-        String title = config.getString("title", "<green>Sell items</green>");
-        if (title == null || title.isBlank()) {
-            throw new ConfigException("GUI sell title cannot be empty");
-        }
-
+        String title = config.getString("title", "<dark_gray>Sell items: <green>{TOTAL_FORMATTED}");
+        if (title == null || title.isBlank()) throw new ConfigException("GUI sell title cannot be empty");
+        title = title.replace("${TOTAL}", "{TOTAL}").replace("${TOTAL_FORMATTED}", "{TOTAL_FORMATTED}");
         int rows = config.getInt("rows", 5);
-        if (rows < 1 || rows > 6) {
-            throw new ConfigException("GUI sell rows must be between 1 and 6");
-        }
+        if (rows != 5) throw new ConfigException("GUI sell rows must be exactly 5");
+
         int size = rows * 9;
-
         Set<Integer> sellSlots = readSlots(config.getIntegerList("sell-slots"), size, "sell-slots");
-        List<ItemDefinition> items = new ArrayList<>();
-        Set<Integer> occupied = new LinkedHashSet<>();
-        ConfigurationSection itemSection = config.getConfigurationSection("items");
-        if (itemSection != null) {
-            for (String id : itemSection.getKeys(false)) {
-                ConfigurationSection section = itemSection.getConfigurationSection(id);
-                if (section == null) {
-                    throw new ConfigException("GUI sell item '" + id + "' must be a section");
-                }
-
-                String materialName = section.getString("material");
-                Material material = materialName == null ? null : Material.matchMaterial(materialName);
-                if (material == null || material.isAir()) {
-                    throw new ConfigException("GUI sell item '" + id + "' has unknown material: " + materialName);
-                }
-
-                Set<Integer> slots = readSlots(section.getIntegerList("slots"), size, "items." + id + ".slots");
-                for (int slot : slots) {
-                    if (sellSlots.contains(slot)) {
-                        throw new ConfigException("GUI sell item '" + id + "' overlaps sell slot " + slot);
-                    }
-                    if (!occupied.add(slot)) {
-                        throw new ConfigException("GUI sell items overlap at slot " + slot);
-                    }
-                }
-
-                String name = section.getString("name", "");
-                List<String> lore = List.copyOf(section.getStringList("lore"));
-                items.add(new ItemDefinition(id, material, name == null ? "" : name, lore, slots));
-            }
+        if (sellSlots.isEmpty()) for (int slot = 0; slot < 36; slot++) sellSlots.add(slot);
+        for (int slot = 0; slot < 36; slot++) {
+            if (!sellSlots.contains(slot)) throw new ConfigException("GUI sell input must include slot " + (slot + 1));
+        }
+        for (int slot : sellSlots) {
+            if (slot >= 36) throw new ConfigException("GUI sell input cannot use final row slot " + (slot + 1));
         }
 
-        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), List.copyOf(items));
+        ConfigurationSection buttonSection = config.getConfigurationSection("category-buttons");
+        if (buttonSection == null) throw new ConfigException("GUI sell category-buttons section is missing");
+        EnumMap<SellCategory, CategoryButton> buttons = new EnumMap<>(SellCategory.class);
+        Set<Integer> used = new LinkedHashSet<>();
+        for (SellCategory category : SellCategory.values()) {
+            ConfigurationSection section = buttonSection.getConfigurationSection(category.id());
+            if (section == null) throw new ConfigException("GUI category button is missing: " + category.id());
+            int slot = readSingleSlot(section.getInt("slot", category.ordinal() + 37), size,
+                "category-buttons." + category.id() + ".slot");
+            if (slot < 36 || !used.add(slot)) throw new ConfigException("Invalid or duplicate category button slot: " + (slot + 1));
+            buttons.put(category, new CategoryButton(category, slot, readItem(section, category.id())));
+        }
+
+        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), Map.copyOf(buttons), readProgress(config));
     }
 
-    @NotNull
-    public String title() {
-        return this.title;
+    @NotNull public String title() { return this.title; }
+    public int rows() { return this.rows; }
+    public int size() { return this.rows * 9; }
+    @NotNull public Set<Integer> sellSlots() { return this.sellSlots; }
+    @NotNull public Map<SellCategory, CategoryButton> categoryButtons() { return this.categoryButtons; }
+    @NotNull public CategoryButton categoryButton(@NotNull SellCategory category) { return this.categoryButtons.get(category); }
+    @NotNull public ProgressConfig progress() { return this.progress; }
+
+    private static ProgressConfig readProgress(YamlConfiguration config) throws ConfigException {
+        ConfigurationSection section = config.getConfigurationSection("progress");
+        if (section == null) throw new ConfigException("GUI sell progress section is missing");
+        int rows = section.getInt("rows", 6);
+        if (rows != 6) throw new ConfigException("GUI progress rows must be exactly 6");
+        int size = rows * 9;
+        List<Integer> slots = new ArrayList<>();
+        for (Integer value : section.getIntegerList("slots")) slots.add(readSingleSlot(value, size, "progress.slots"));
+        if (slots.isEmpty()) {
+            int[] defaults = {11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 18};
+            for (int value : defaults) slots.add(value - 1);
+        }
+        int summary = readSingleSlot(section.getInt("summary-slot", 50), size, "progress.summary-slot");
+        int previous = readSingleSlot(section.getInt("previous-slot", 46), size, "progress.previous-slot");
+        int next = readSingleSlot(section.getInt("next-slot", 54), size, "progress.next-slot");
+        ConfigurationSection panes = section.getConfigurationSection("panes");
+        if (panes == null) throw new ConfigException("GUI progress panes section is missing");
+        Pane inProgress = new Pane("in-progress", readItem(required(panes, "in-progress"), "in-progress"));
+        Pane completed = new Pane("completed", readItem(required(panes, "completed"), "completed"));
+        Pane incomplete = new Pane("incomplete", readItem(required(panes, "incomplete"), "incomplete"));
+        ItemDefinition previousItem = readItem(required(section, "previous"), "previous");
+        ItemDefinition nextItem = readItem(required(section, "next"), "next");
+        return new ProgressConfig(section.getString("title", "<dark_gray>Progress {SECTION} — {CURRENT_PAGE}/{MAX_PAGE}"),
+            rows, List.copyOf(slots), summary, previous, next, inProgress, completed, incomplete, previousItem, nextItem);
     }
 
-    public int rows() {
-        return this.rows;
+    private static ConfigurationSection required(ConfigurationSection parent, String key) throws ConfigException {
+        ConfigurationSection section = parent.getConfigurationSection(key);
+        if (section == null) throw new ConfigException("GUI sell section is missing: " + key);
+        return section;
     }
 
-    public int size() {
-        return this.rows * 9;
-    }
-
-    @NotNull
-    public Set<Integer> sellSlots() {
-        return this.sellSlots;
-    }
-
-    @NotNull
-    public List<ItemDefinition> items() {
-        return this.items;
+    private static ItemDefinition readItem(ConfigurationSection section, String id) throws ConfigException {
+        String materialName = section.getString("material");
+        Material material = materialName == null ? null : Material.matchMaterial(materialName);
+        if (material == null || material.isAir()) throw new ConfigException("GUI item '" + id + "' has unknown material: " + materialName);
+        return new ItemDefinition(id, material, section.getString("name", ""), List.copyOf(section.getStringList("lore")));
     }
 
     private static Set<Integer> readSlots(List<Integer> values, int size, String path) throws ConfigException {
         Set<Integer> slots = new LinkedHashSet<>();
-        for (Integer slot : values) {
-            if (slot == null || slot < 0 || slot >= size) {
-                throw new ConfigException("GUI sell slot out of bounds in " + path + ": " + slot);
-            }
-            if (!slots.add(slot)) {
-                throw new ConfigException("GUI sell slot is listed more than once in " + path + ": " + slot);
-            }
-        }
-        return Collections.unmodifiableSet(slots);
+        for (Integer value : values) slots.add(readSingleSlot(value, size, path));
+        return slots;
     }
 
-    public record ItemDefinition(
-        @NotNull String id,
-        @NotNull Material material,
-        @NotNull String name,
-        @NotNull List<String> lore,
-        @NotNull Set<Integer> slots
+    private static int readSingleSlot(int value, int size, String path) throws ConfigException {
+        int slot = value - 1;
+        if (slot < 0 || slot >= size) throw new ConfigException("GUI slot out of bounds in " + path + ": " + value);
+        return slot;
+    }
+
+    public record CategoryButton(@NotNull SellCategory category, int slot, @NotNull ItemDefinition item) {
+    }
+
+    public record ProgressConfig(
+        @NotNull String title, int rows, @NotNull List<Integer> slots, int summarySlot, int previousSlot, int nextSlot,
+        @NotNull Pane inProgress, @NotNull Pane completed, @NotNull Pane incomplete,
+        @NotNull ItemDefinition previous, @NotNull ItemDefinition next
     ) {
+        public int size() { return this.rows * 9; }
+        public int pageCount() { return (SellProgress.thresholds().size() + this.slots.size() - 1) / this.slots.size(); }
+    }
+
+    public record Pane(@NotNull String id, @NotNull ItemDefinition item) {
+    }
+
+    public record ItemDefinition(@NotNull String id, @NotNull Material material, @NotNull String name, @NotNull List<String> lore) {
         public ItemDefinition {
             lore = List.copyOf(lore);
-            slots = Set.copyOf(slots);
         }
 
-        /** Builds one configured display item for a viewer. */
         @NotNull
         public ItemStack createItem(@NotNull Player player, @NotNull LangService lang) {
+            return this.createItem(player, lang, Map.of());
+        }
+
+        @NotNull
+        public ItemStack createItem(@NotNull Player player, @NotNull LangService lang, @NotNull Map<String, String> placeholders) {
+            String renderedName = replace(this.name, placeholders);
             ItemStack item = new ItemStack(this.material);
             ItemMeta meta = item.getItemMeta();
-            if (!this.name.isEmpty()) meta.displayName(lang.parse(this.name, player));
+            if (!renderedName.isEmpty()) {
+                meta.displayName(lang.parse(renderedName, player).decoration(TextDecoration.ITALIC, false));
+            }
             if (!this.lore.isEmpty()) {
                 List<Component> rendered = new ArrayList<>(this.lore.size());
-                for (String line : this.lore) rendered.add(lang.parse(line, player));
+                for (String line : this.lore) {
+                    rendered.add(lang.parse(replace(line, placeholders), player).decoration(TextDecoration.ITALIC, false));
+                }
                 meta.lore(rendered);
             }
             item.setItemMeta(meta);
             return item;
+        }
+
+        private static String replace(String text, Map<String, String> placeholders) {
+            String result = text;
+            for (Map.Entry<String, String> entry : placeholders.entrySet()) result = result.replace("{" + entry.getKey() + "}", entry.getValue());
+            return result;
         }
     }
 }

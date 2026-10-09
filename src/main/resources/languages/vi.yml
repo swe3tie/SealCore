@@ -4,8 +4,6 @@
 # Thiếu khóa nào sẽ tự động dùng bản tiếng Anh (en.yml).
 # Định dạng màu sắc: MiniMessage - https://docs.advntr.dev/minimessage/format.html
 #
-# Màu chủ đạo: <#9CC0D9>
-#
 # Placeholder trong tin nhắn có dạng: {TÊN_PLACEHOLDER}
 # Các placeholder cụ thể được liệt kê và giải thích ngay trước mỗi mục tin nhắn.
 # Nếu muốn ẩn hoàn toàn một tin nhắn, hãy đặt giá trị thành rỗng: ''
