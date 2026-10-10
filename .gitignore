@@ -7,3 +7,4 @@ out/
 *.iml
 .vscode/
 .DS_Store
+temp/

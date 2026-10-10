@@ -1,0 +1,103 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / GUI: sell-gui                              │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+# Sell input occupies first four rows; category buttons occupy final row.
+# Category button placeholders: {MULTIPLIER}, {NEXT_MULTIPLIER}, {CURRENT}, {CURRENT_FORMATTED},
+# {NEXT_TARGET}, {NEXT_TARGET_FORMATTED}, {REMAINING}, {REMAINING_FORMATTED}, {PERCENTAGE}, {PROGRESS_BAR}, {SECTION}.
+# Title placeholders: {TOTAL}, {TOTAL_FORMATTED}.
+
+config-version: 2
+
+title: '<dark_gray>ᴄʜᴏ ᴠậᴛ ᴘʜẩᴍ ᴠàᴏ đâʏ để ʙáɴ — <green>${TOTAL_FORMATTED}'
+rows: 5
+sell-slots: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
+
+category-buttons:
+  crops:
+    slot: 37
+    material: WHEAT
+    name: '<#9CC0D9>ᴄâʏ ᴛʀồɴɢ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴄâʏ ᴛʀồɴɢ ᴠà ᴠậᴛ ᴘʜẩᴍ ɴôɴɢ ɴɢʜɪệᴘ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  ores:
+    slot: 38
+    material: DIAMOND
+    name: '<#9CC0D9>ᴋʜᴏáɴɢ ѕảɴ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴋʜᴏáɴɢ ѕảɴ và ǫᴜặɴɢ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  mobs:
+    slot: 39
+    material: BONE
+    name: '<#9CC0D9>ѕɪɴʜ ᴠậᴛ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴠậᴛ ᴘʜẩᴍ ʀơɪ ʀᴀ ᴛừ ѕɪɴʜ ᴠậᴛ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  natural:
+    slot: 40
+    material: OAK_LEAVES
+    name: '<#9CC0D9>ᴛự ɴʜɪêɴ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴠậᴛ ᴘʜẩᴍ ᴛừ ᴛự ɴʜɪêɴ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  tools:
+    slot: 41
+    material: NETHERITE_HELMET
+    name: '<#9CC0D9>ɢɪáᴘ ᴠà ᴄôɴɢ ᴄụ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ɢɪáᴘ ᴠà ᴄôɴɢ ᴄụ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  fish:
+    slot: 42
+    material: TROPICAL_FISH
+    name: '<#9CC0D9>ᴄá'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴄá để nâng cấp hệ số bán của bạn'
+  books:
+    slot: 43
+    material: BOOK
+    name: '<#9CC0D9>ѕáᴄʜ ᴠà ѕáᴄʜ ᴘʜù ᴘʜéᴘ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ѕáᴄʜ ᴠà ѕáᴄʜ ᴘʜù ᴘʜéᴘ'
+      - '<gray>để nâng cấp hệ số bán của bạn'
+  potions:
+    slot: 44
+    material: BREWING_STAND
+    name: '<#9CC0D9>ᴛʜᴜốᴄ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴛʜᴜốᴄ để nâng cấp hệ số bán của bạn'
+  blocks:
+    slot: 45
+    material: BRICK
+    name: '<#9CC0D9>ᴋʜốɪ'
+    lore:
+      - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+      - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+      - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+      - '<gray>Bán ᴋʜốɪ để nâng cấp hệ số bán của bạn'

@@ -16,7 +16,6 @@ class LangFlattenTest {
         YamlConfiguration yaml = new YamlConfiguration();
         yaml.loadFromString("""
             config-version: 1
-            prefix: 'P '
             core:
               help:
                 - 'line one'
@@ -28,7 +27,6 @@ class LangFlattenTest {
 
         Map<String, List<String>> flat = LangService.flatten(yaml);
 
-        assertEquals(List.of("P "), flat.get("prefix"));
         assertEquals(List.of("line one", "line two"), flat.get("core.help"));
         assertEquals(List.of("ok"), flat.get("core.reload.success"));
         assertEquals(List.of(""), flat.get("empty"));

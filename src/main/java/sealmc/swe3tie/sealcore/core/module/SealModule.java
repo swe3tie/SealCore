@@ -18,7 +18,8 @@ import java.util.Set;
 /**
  * Base class for a SealCore module (packaged in the plugin, not standalone).
  * <p>
- * A module owns {@code modules/<id>.yml}, its listeners, tasks, placeholders and submodules. Anything
+ * A module owns {@code modules/<id>/config.yml} (with legacy flat-file fallback), its listeners,
+ * tasks, placeholders and submodules. Anything
  * registered through {@link #listen}, {@link #track} or {@link #registerPlaceholders} is released
  * automatically on disable, so modules can be toggled at runtime.
  */
@@ -74,7 +75,7 @@ public abstract class SealModule {
     protected void onDisable() {
     }
 
-    /** Called after {@code modules/<id>.yml} was re-read while the module stays enabled. */
+    /** Called after the module config was re-read while the module stays enabled. */
     protected void onReload() throws Exception {
     }
 
@@ -131,6 +132,12 @@ public abstract class SealModule {
     private void loadConfig() throws ConfigException {
         if (this.file == null) this.file = this.core.config().moduleFile(this.id, this.freeSections());
         this.config = this.file.load();
+    }
+
+    /** Resolves a module-owned YAML file under {@code modules/<id>/}. */
+    @NotNull
+    protected final YamlFile resolveFile(@NotNull String relativePath) {
+        return this.core.config().moduleCustomFile(this.id, relativePath);
     }
 
     // Helpers for subclasses --------------------------------------------------------------------

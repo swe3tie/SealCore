@@ -20,6 +20,7 @@ import java.util.List;
 public final class SealCommand {
 
     private static final String BASE = "sealcore.command";
+    private static final String ADMIN = "sealcore.admin";
 
     private final SealCore core;
 
@@ -27,23 +28,33 @@ public final class SealCommand {
         this.core = core;
     }
 
+    private static boolean isAdmin(@NotNull CommandSender sender) {
+        return sender.isOp() || sender.hasPermission(ADMIN) || sender.hasPermission(BASE);
+    }
+
     public void register(@NotNull CommandService commands) {
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal("sealcore")
-            .executes(ctx -> this.help(ctx.getSource().getSender()))
-            .then(Commands.literal("version").requires(s -> s.getSender().hasPermission(BASE))
+            .executes(ctx -> this.executeRoot(ctx.getSource().getSender()))
+            .then(Commands.literal("version")
                 .executes(ctx -> this.version(ctx.getSource().getSender())))
-            .then(Commands.literal("reload").requires(s -> s.getSender().hasPermission(BASE + ".reload"))
+            .then(Commands.literal("reload")
+                .requires(s -> isAdmin(s.getSender()) || s.getSender().hasPermission(BASE + ".reload"))
                 .executes(ctx -> this.reload(ctx.getSource().getSender())))
-            .then(Commands.literal("debug").requires(s -> s.getSender().hasPermission(BASE + ".debug"))
+            .then(Commands.literal("debug")
+                .requires(s -> isAdmin(s.getSender()) || s.getSender().hasPermission(BASE + ".debug"))
                 .executes(ctx -> this.debug(ctx.getSource().getSender())))
             .then(this.moduleNode());
 
-        commands.register(() -> true, root, "SealCore administration", List.of("sc"), BASE);
+        commands.register(() -> true, root, "SealCore administration", List.of("sc"), null);
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> moduleNode() {
         return Commands.literal("module")
-            .requires(s -> s.getSender().hasPermission(BASE + ".module"))
+            .requires(s -> isAdmin(s.getSender()) || s.getSender().hasPermission(BASE + ".module"))
+            .executes(ctx -> {
+                CommandUsage.send(this.core.lang(), ctx.getSource().getSender(), "/sealcore module <list|enable|disable|reload> [id]");
+                return 0;
+            })
             .then(Commands.literal("list").executes(ctx -> this.listModules(ctx.getSource().getSender())))
             .then(this.moduleAction("enable", this::enableModule))
             .then(this.moduleAction("disable", this::disableModule))
@@ -51,7 +62,12 @@ public final class SealCommand {
     }
 
     private LiteralArgumentBuilder<CommandSourceStack> moduleAction(String name, ModuleAction action) {
-        return Commands.literal(name).then(Commands.argument("module", StringArgumentType.word())
+        return Commands.literal(name)
+            .executes(ctx -> {
+                CommandUsage.send(this.core.lang(), ctx.getSource().getSender(), "/sealcore module " + name + " <id>");
+                return 0;
+            })
+            .then(Commands.argument("module", StringArgumentType.word())
             .suggests((ctx, builder) -> {
                 this.core.modules().all().forEach(m -> {
                     if (m.id().startsWith(builder.getRemainingLowerCase())) builder.suggest(m.id());
@@ -76,11 +92,14 @@ public final class SealCommand {
         void run(CommandSender sender, SealModule module);
     }
 
-    private int help(CommandSender sender) {
-        if (!sender.hasPermission(BASE)) {
-            this.core.lang().send(sender, "core.no-permission");
-            return 0;
+    private int executeRoot(CommandSender sender) {
+        if (isAdmin(sender)) {
+            return this.help(sender);
         }
+        return this.version(sender);
+    }
+
+    private int help(CommandSender sender) {
         this.core.lang().send(sender, "core.help", Placeholder.unparsed("version", this.core.getPluginMeta().getVersion()));
         return 1;
     }

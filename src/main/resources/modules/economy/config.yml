@@ -1,0 +1,41 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy                                              │
+# ╰──────────────────────────────────────────────────────────────╯
+# Quản lý số dư (/balance), chuyển tiền (/pay) và bán đồ (/sell) kết nối qua ExcellentEconomy.
+# Bật/tắt toàn bộ module tại mục modules.economy trong file config.yml.
+# Tin nhắn nằm ở languages/, GUI và giá nằm trong thư mục module này.
+
+# Phiên bản cấu hình - không tự ý thay đổi.
+config-version: 1
+
+# Cấu hình các lệnh của module economy.
+# [restart] Thay đổi tên lệnh (name) và bí danh (aliases) cần khởi động lại server.
+commands:
+  # Lệnh xem số dư tài khoản.
+  balance:
+    name: balance
+    aliases: [bal]
+    # Quyền xem số dư bản thân.
+    permission: sealcore.economy.balance
+    # Quyền xem số dư người chơi khác (/balance <player>).
+    other-permission: sealcore.economy.balance.others
+
+  # Lệnh chuyển tiền giữa các người chơi.
+  pay:
+    name: pay
+    aliases: []
+    permission: sealcore.economy.pay
+    # Số tiền tối thiểu cho một lần chuyển (người có quyền bypass sẽ bỏ qua).
+    min-amount: 1
+    # Số tiền tối đa cho một lần chuyển.
+    max-amount: 1000000000
+    # Thời gian chờ (giây) giữa các lần chuyển tiền.
+    cooldown-seconds: 3
+    # Quyền bỏ qua giới hạn số tiền và thời gian chờ.
+    bypass-permission: sealcore.economy.pay.bypass
+
+  # Lệnh bán vật phẩm qua giao diện GUI (/sell).
+  sell:
+    name: sell
+    aliases: []
+    permission: sealcore.economy.sell

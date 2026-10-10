@@ -4,6 +4,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
@@ -40,11 +41,39 @@ public final class ConfigService {
         return current;
     }
 
-    /** File handle for {@code modules/<id>.yml}, merged against the bundled default if one exists. */
+    /**
+     * File handle for a module config. Directory-based configs are preferred, while the legacy
+     * {@code modules/<id>.yml} layout remains supported for modules that have not migrated yet.
+     */
     @NotNull
     public YamlFile moduleFile(@NotNull String moduleId, @NotNull Collection<String> freeSections) {
-        String name = "modules/" + moduleId + ".yml";
-        return new YamlFile(this.plugin.getDataFolder().toPath().resolve(name), resource(this.plugin, name), freeSections);
+        String directoryName = "modules/" + moduleId + "/config.yml";
+        Path directoryPath = this.plugin.getDataFolder().toPath().resolve(directoryName);
+        if (this.plugin.getResource(directoryName) != null || Files.exists(directoryPath)) {
+            return new YamlFile(directoryPath, resource(this.plugin, directoryName), freeSections);
+        }
+
+        String legacyName = "modules/" + moduleId + ".yml";
+        return new YamlFile(
+            this.plugin.getDataFolder().toPath().resolve(legacyName),
+            resource(this.plugin, legacyName),
+            freeSections
+        );
+    }
+
+    /** File handle for a module-owned resource such as {@code prices.yml} or {@code gui/sell.yml}. */
+    @NotNull
+    public YamlFile moduleCustomFile(@NotNull String moduleId, @NotNull String relativePath) {
+        if (relativePath.isBlank() || relativePath.startsWith("/") || relativePath.contains("\\")) {
+            throw new IllegalArgumentException("Module resource path must be relative: " + relativePath);
+        }
+        Path path = Path.of(relativePath).normalize();
+        if (path.isAbsolute() || path.startsWith("..")) {
+            throw new IllegalArgumentException("Module resource path escapes module directory: " + relativePath);
+        }
+
+        String name = "modules/" + moduleId + "/" + path.toString().replace(java.io.File.separatorChar, '/');
+        return new YamlFile(this.plugin.getDataFolder().toPath().resolve(name), resource(this.plugin, name));
     }
 
     @NotNull
