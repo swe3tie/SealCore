@@ -1,16 +1,15 @@
 # ╭──────────────────────────────────────────────────────────────╮
-# │ Module: economy / GUI: sell                                  │
+# │ Module: economy / GUI: sell-gui                              │
 # ╰──────────────────────────────────────────────────────────────╯
 # All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
 # Sell input occupies first four rows; category buttons occupy final row.
-# Category/summary placeholders: {MULTIPLIER}, {NEXT_MULTIPLIER}, {CURRENT}, {CURRENT_FORMATTED},
+# Category button placeholders: {MULTIPLIER}, {NEXT_MULTIPLIER}, {CURRENT}, {CURRENT_FORMATTED},
 # {NEXT_TARGET}, {NEXT_TARGET_FORMATTED}, {REMAINING}, {REMAINING_FORMATTED}, {PERCENTAGE}, {PROGRESS_BAR}, {SECTION}.
-# Progress panes also support {NEED}, {NEED_FORMATTED}; {NEED} is threshold target, not remaining amount.
-# Title placeholders: {TOTAL}, {TOTAL_FORMATTED}; progress title: {SECTION}, {CURRENT_PAGE}, {MAX_PAGE}.
+# Title placeholders: {TOTAL}, {TOTAL_FORMATTED}.
 
 config-version: 2
 
-title: '<dark_gray>ѕᴇʟʟ ɪᴛᴇᴍѕ: <green>{TOTAL_FORMATTED}'
+title: '<dark_gray>ᴄʜᴏ ᴠậᴛ ᴘʜẩᴍ ᴠàᴏ đâʏ để ʙáɴ — <green>${TOTAL_FORMATTED}'
 rows: 5
 sell-slots: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36]
 
@@ -102,32 +101,3 @@ category-buttons:
       - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
       - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
       - '<gray>Bán ᴋʜốɪ để nâng cấp hệ số bán của bạn'
-
-progress:
-  title: '<dark_gray>ᴛɪếɴ độ {SECTION} — {CURRENT_PAGE}/{MAX_PAGE}'
-  rows: 6
-  slots: [11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 18]
-  summary-slot: 50
-  previous-slot: 46
-  next-slot: 54
-  previous:
-    material: ARROW
-    name: '<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ'
-    lore: ['<white>Nhấp để quay về trang trước']
-  next:
-    material: ARROW
-    name: '<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ'
-    lore: ['<white>Nhấp để sang trang sau']
-  panes:
-    in-progress:
-      material: YELLOW_STAINED_GLASS_PANE
-      name: '<yellow>ᴛʀᴏɴɢ ǫᴜá ᴛʀìɴʜ'
-      lore: ['<white>Hệ số: <#9CC0D9>{MULTIPLIER}x', '<dark_gray>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%', '<gray>{CURRENT_FORMATTED}/{NEED_FORMATTED}']
-    completed:
-      material: LIME_STAINED_GLASS_PANE
-      name: '<green>ʜᴏàɴ ᴛʜàɴʜ'
-      lore: ['<white>Hệ số: <#9CC0D9>{MULTIPLIER}x', '<dark_gray>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%', '<gray>{CURRENT_FORMATTED}/{NEED_FORMATTED}']
-    incomplete:
-      material: GRAY_STAINED_GLASS_PANE
-      name: '<white>ᴄʜưᴀ ʜᴏàɴ ᴛʜàɴʜ'
-      lore: ['<white>Hệ số: <#9CC0D9>{MULTIPLIER}x', '<dark_gray>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%', '<gray>{CURRENT_FORMATTED}/{NEED_FORMATTED}']

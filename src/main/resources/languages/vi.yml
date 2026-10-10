@@ -102,7 +102,7 @@ economy:
     # Placeholder: {MIN} - Số tiền tối thiểu; {MAX} - Số tiền tối đa
     out-of-range: '<red>Số tiền phải từ <green>${MIN}</green> <red>đến <green>${MAX}</green>.'
 
-  # Lệnh bán vật phẩm qua giao diện GUI (/sell). Tiêu đề GUI nằm ở modules/economy/gui/sell.yml.
+  # Lệnh bán vật phẩm qua giao diện GUI (/sell). Tiêu đề GUI nằm ở modules/economy/gui/sell-gui.yml và sell-multiplier.yml.
   # Placeholder: {MONEY_FORMATTED} - Nhận được dạng compact; {MONEY} - Dạng chuẩn
   sell:
     sold:

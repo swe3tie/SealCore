@@ -40,13 +40,14 @@ Command names and aliases are registered during server startup. Restart the serv
 | `plugins/SealCore/languages/vi.yml` | Vietnamese messages. |
 | `plugins/SealCore/modules/economy/config.yml` | Economy command names, permissions, limits, and cooldown. |
 | `plugins/SealCore/modules/economy/prices.yml` | Per-item sell prices, including potion and enchanted-book keys. |
-| `plugins/SealCore/modules/economy/gui/sell.yml` | `/sell` title, rows, input slots, and optional decorative items. |
+| `plugins/SealCore/modules/economy/gui/sell-gui.yml` | `/sell` title, rows, input slots, and category buttons. |
+| `plugins/SealCore/modules/economy/gui/sell-multiplier.yml` | Category sell progression GUI, page slots, navigation, and state panes. |
 
 Missing default keys are merged into existing files without replacing user values. Keep module files inside their module directory when adding module-specific configuration.
 
 ### `/sell` GUI
 
-`modules/economy/gui/sell.yml` controls inventory size and which slots accept items. Items placed in configured input slots are priced using `modules/economy/prices.yml` when the GUI closes. Items without a price return to the player. The title can use `{TOTAL}`, `{TOTAL_FORMATTED}`, `{MONEY}`, and `{MONEY_FORMATTED}` placeholders.
+`modules/economy/gui/sell-gui.yml` controls inventory size and which slots accept items. Items placed in configured input slots are priced using `modules/economy/prices.yml` when the GUI closes. Items without a price return to the player. The title can use `{TOTAL}`, `{TOTAL_FORMATTED}`, `{MONEY}`, and `{MONEY_FORMATTED}` placeholders. Category progression details are configured in `modules/economy/gui/sell-multiplier.yml`.
 
 ### Permissions
 

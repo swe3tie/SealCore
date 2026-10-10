@@ -60,6 +60,18 @@ class SellProgressTest {
     }
 
     @Test
+    void setsIncompleteMilestonesToZeroProgress() {
+        var incomplete = SellProgress.thresholdPlaceholders(SellCategory.CROPS, 10_000D,
+            SellProgress.thresholds().get(1), "x", "-");
+        assertEquals("0.0", incomplete.get("PERCENTAGE"));
+        assertEquals("10,000", incomplete.get("CURRENT"));
+        assertEquals("10K", incomplete.get("CURRENT_FORMATTED"));
+        assertEquals("----------------", incomplete.get("PROGRESS_BAR"));
+        assertEquals("40,000", incomplete.get("REMAINING"));
+        assertEquals("40K", incomplete.get("REMAINING_FORMATTED"));
+    }
+
+    @Test
     void calculatesProgressBarAndPercentage() {
         SellProgress.Threshold threshold = SellProgress.thresholds().getFirst();
         assertEquals("0.0", SellProgress.percentageText(0D, threshold));

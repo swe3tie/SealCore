@@ -41,14 +41,20 @@ public final class SellGuiConfig {
 
     @NotNull
     public static SellGuiConfig load(@NotNull YamlConfiguration config) throws ConfigException {
-        String title = config.getString("title", "<dark_gray>Sell items: <green>{TOTAL_FORMATTED}");
+        return load(config, config);
+    }
+
+    @NotNull
+    public static SellGuiConfig load(@NotNull YamlConfiguration sellConfig,
+                                     @NotNull YamlConfiguration multiplierConfig) throws ConfigException {
+        String title = sellConfig.getString("title", "<dark_gray>Sell items: <green>{TOTAL_FORMATTED}");
         if (title == null || title.isBlank()) throw new ConfigException("GUI sell title cannot be empty");
         title = title.replace("${TOTAL}", "{TOTAL}").replace("${TOTAL_FORMATTED}", "{TOTAL_FORMATTED}");
-        int rows = config.getInt("rows", 5);
+        int rows = sellConfig.getInt("rows", 5);
         if (rows != 5) throw new ConfigException("GUI sell rows must be exactly 5");
 
         int size = rows * 9;
-        Set<Integer> sellSlots = readSlots(config.getIntegerList("sell-slots"), size, "sell-slots");
+        Set<Integer> sellSlots = readSlots(sellConfig.getIntegerList("sell-slots"), size, "sell-slots");
         if (sellSlots.isEmpty()) for (int slot = 0; slot < 36; slot++) sellSlots.add(slot);
         for (int slot = 0; slot < 36; slot++) {
             if (!sellSlots.contains(slot)) throw new ConfigException("GUI sell input must include slot " + (slot + 1));
@@ -57,7 +63,7 @@ public final class SellGuiConfig {
             if (slot >= 36) throw new ConfigException("GUI sell input cannot use final row slot " + (slot + 1));
         }
 
-        ConfigurationSection buttonSection = config.getConfigurationSection("category-buttons");
+        ConfigurationSection buttonSection = sellConfig.getConfigurationSection("category-buttons");
         if (buttonSection == null) throw new ConfigException("GUI sell category-buttons section is missing");
         EnumMap<SellCategory, CategoryButton> buttons = new EnumMap<>(SellCategory.class);
         Set<Integer> used = new LinkedHashSet<>();
@@ -70,7 +76,7 @@ public final class SellGuiConfig {
             buttons.put(category, new CategoryButton(category, slot, readItem(section, category.id())));
         }
 
-        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), Map.copyOf(buttons), readProgress(config));
+        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), Map.copyOf(buttons), readProgress(multiplierConfig));
     }
 
     @NotNull public String title() { return this.title; }
@@ -81,18 +87,20 @@ public final class SellGuiConfig {
     @NotNull public CategoryButton categoryButton(@NotNull SellCategory category) { return this.categoryButtons.get(category); }
     @NotNull public ProgressConfig progress() { return this.progress; }
 
-    private static ProgressConfig readProgress(YamlConfiguration config) throws ConfigException {
+    private static ProgressConfig readProgress(ConfigurationSection config) throws ConfigException {
+        if (config == null) throw new ConfigException("GUI sell progress section is missing");
         ConfigurationSection section = config.getConfigurationSection("progress");
-        if (section == null) throw new ConfigException("GUI sell progress section is missing");
+        if (section == null) section = config;
         int rows = section.getInt("rows", 6);
         if (rows != 6) throw new ConfigException("GUI progress rows must be exactly 6");
         int size = rows * 9;
         List<Integer> slots = new ArrayList<>();
         for (Integer value : section.getIntegerList("slots")) slots.add(readSingleSlot(value, size, "progress.slots"));
         if (slots.isEmpty()) {
-            int[] defaults = {11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 18};
+            int[] defaults = {11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 10};
             for (int value : defaults) slots.add(value - 1);
         }
+        Map<Integer, List<Integer>> pageSlots = readPageSlots(section, size, slots);
         int summary = readSingleSlot(section.getInt("summary-slot", 50), size, "progress.summary-slot");
         int previous = readSingleSlot(section.getInt("previous-slot", 46), size, "progress.previous-slot");
         int next = readSingleSlot(section.getInt("next-slot", 54), size, "progress.next-slot");
@@ -104,7 +112,41 @@ public final class SellGuiConfig {
         ItemDefinition previousItem = readItem(required(section, "previous"), "previous");
         ItemDefinition nextItem = readItem(required(section, "next"), "next");
         return new ProgressConfig(section.getString("title", "<dark_gray>Progress {SECTION} — {CURRENT_PAGE}/{MAX_PAGE}"),
-            rows, List.copyOf(slots), summary, previous, next, inProgress, completed, incomplete, previousItem, nextItem);
+            rows, List.copyOf(slots), pageSlots, summary, previous, next, inProgress, completed, incomplete, previousItem, nextItem);
+    }
+
+    /**
+     * Reads the optional {@code page-slots} map (page number to 1-based slots). When absent, distributes the
+     * flat {@code slots} list evenly across as many pages as the thresholds need.
+     */
+    private static Map<Integer, List<Integer>> readPageSlots(ConfigurationSection section, int size,
+                                                             List<Integer> fallback) throws ConfigException {
+        Map<Integer, List<Integer>> pages = new java.util.TreeMap<>();
+        ConfigurationSection configured = section.getConfigurationSection("page-slots");
+        if (configured != null) {
+            for (String key : configured.getKeys(false)) {
+                int page;
+                try {
+                    page = Integer.parseInt(key);
+                } catch (NumberFormatException exception) {
+                    throw new ConfigException("GUI progress page-slots has non-numeric page: " + key);
+                }
+                if (page < 1) throw new ConfigException("GUI progress page-slots has invalid page: " + key);
+                List<Integer> pageList = new ArrayList<>();
+                for (Integer value : configured.getIntegerList(key)) {
+                    pageList.add(readSingleSlot(value, size, "progress.page-slots." + key));
+                }
+                if (pageList.isEmpty()) throw new ConfigException("GUI progress page-slots." + key + " cannot be empty");
+                pages.put(page, List.copyOf(pageList));
+            }
+        }
+        if (!pages.isEmpty()) return Map.copyOf(pages);
+
+        int perPage = Math.max(1, fallback.size());
+        int total = SellProgress.thresholds().size();
+        int pageCount = Math.max(1, (total + perPage - 1) / perPage);
+        for (int page = 1; page <= pageCount; page++) pages.put(page, List.copyOf(fallback));
+        return Map.copyOf(pages);
     }
 
     private static ConfigurationSection required(ConfigurationSection parent, String key) throws ConfigException {
@@ -115,9 +157,30 @@ public final class SellGuiConfig {
 
     private static ItemDefinition readItem(ConfigurationSection section, String id) throws ConfigException {
         String materialName = section.getString("material");
-        Material material = materialName == null ? null : Material.matchMaterial(materialName);
-        if (material == null || material.isAir()) throw new ConfigException("GUI item '" + id + "' has unknown material: " + materialName);
+        Material material = parseMaterial(materialName);
+        if (material == null || isAir(material)) throw new ConfigException("GUI item '" + id + "' has unknown material: " + materialName);
         return new ItemDefinition(id, material, section.getString("name", ""), List.copyOf(section.getStringList("lore")));
+    }
+
+    private static boolean isAir(Material material) {
+        return material == Material.AIR || material == Material.CAVE_AIR || material == Material.VOID_AIR;
+    }
+
+    private static Material parseMaterial(String name) {
+        if (name == null || name.isBlank()) return null;
+        String clean = name.trim();
+        if (clean.regionMatches(true, 0, "minecraft:", 0, 10)) {
+            clean = clean.substring(10);
+        }
+        try {
+            return Material.valueOf(clean.toUpperCase(java.util.Locale.ROOT));
+        } catch (IllegalArgumentException ignored) {
+            try {
+                return Material.matchMaterial(name);
+            } catch (Throwable ignored2) {
+                return null;
+            }
+        }
     }
 
     private static Set<Integer> readSlots(List<Integer> values, int size, String path) throws ConfigException {
@@ -136,12 +199,37 @@ public final class SellGuiConfig {
     }
 
     public record ProgressConfig(
-        @NotNull String title, int rows, @NotNull List<Integer> slots, int summarySlot, int previousSlot, int nextSlot,
+        @NotNull String title, int rows, @NotNull List<Integer> slots,
+        @NotNull Map<Integer, List<Integer>> pageSlots, int summarySlot, int previousSlot, int nextSlot,
         @NotNull Pane inProgress, @NotNull Pane completed, @NotNull Pane incomplete,
         @NotNull ItemDefinition previous, @NotNull ItemDefinition next
     ) {
         public int size() { return this.rows * 9; }
-        public int pageCount() { return (SellProgress.thresholds().size() + this.slots.size() - 1) / this.slots.size(); }
+
+        public int pageCount() {
+            return this.pageSlots.keySet().stream().mapToInt(Integer::intValue).max().orElse(1);
+        }
+
+        /** Slots for a 1-based page, falling back to the flat {@code slots} list. */
+        @NotNull
+        public List<Integer> slotsForPage(int page) {
+            return this.pageSlots.getOrDefault(page, this.slots);
+        }
+
+        /** Threshold index the given 1-based page starts at, based on the preceding pages' slot counts. */
+        public int startIndex(int page) {
+            int start = 0;
+            for (int previous = 1; previous < page; previous++) start += this.slotsForPage(previous).size();
+            return start;
+        }
+
+        /** Every slot any page can occupy, so stale panes can be cleared before repopulating. */
+        @NotNull
+        public List<Integer> allProgressSlots() {
+            Set<Integer> all = new LinkedHashSet<>();
+            for (List<Integer> page : this.pageSlots.values()) all.addAll(page);
+            return List.copyOf(all);
+        }
     }
 
     public record Pane(@NotNull String id, @NotNull ItemDefinition item) {

@@ -150,6 +150,7 @@ public final class SellProgress {
                                                             @NotNull String incomplete, @NotNull String configuredName) {
         double current = Math.max(0D, paid);
         double required = target == null ? THRESHOLDS.getLast().required() : target.required();
+        double progress = progressAmount(paid, target);
         Map<String, String> values = new java.util.HashMap<>(placeholders(category, paid, configuredName));
         values.put("MULTIPLIER", formatMultiplier(target == null ? MAX_MULTIPLIER : target.multiplier()));
         values.put("CURRENT", MoneyFormat.formatStandard(current));
@@ -162,9 +163,20 @@ public final class SellProgress {
         values.put("NEXT_TARGET_FORMATTED", MoneyFormat.formatCompact(required));
         values.put("REMAINING", MoneyFormat.formatStandard(thresholdRemaining(paid, target)));
         values.put("REMAINING_FORMATTED", MoneyFormat.formatCompact(thresholdRemaining(paid, target)));
-        values.put("PERCENTAGE", percentageText(paid, target));
-        values.put("PROGRESS_BAR", bar(paid, target, complete, incomplete));
+        values.put("PERCENTAGE", percentageText(progress, target));
+        values.put("PROGRESS_BAR", bar(progress, target, complete, incomplete));
         return Map.copyOf(values);
+    }
+
+    /**
+     * Amount counted toward one milestone's bar: the full target when completed, the paid total while it is the
+     * next milestone, and zero for milestones not yet reached.
+     */
+    private static double progressAmount(double paid, Threshold target) {
+        if (target == null) return Math.max(0D, paid);
+        double current = Math.max(0D, paid);
+        if (current >= target.required()) return target.required();
+        return next(current) == target ? current : 0D;
     }
 
     private static double clamp(double value, double min, double max) {

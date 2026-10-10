@@ -102,7 +102,7 @@ economy:
     # Placeholder: {MIN} - Minimum allowed amount; {MAX} - Maximum allowed amount
     out-of-range: '<red>Amount must be between <green>${MIN}</green> <red>and <green>${MAX}</green>.'
 
-  # Sell GUI command (/sell). GUI title is configured in modules/economy/gui/sell.yml.
+  # Sell GUI command (/sell). GUI titles are configured in modules/economy/gui/sell-gui.yml and sell-multiplier.yml.
   # Placeholder: {MONEY_FORMATTED} - Compact money; {MONEY} - Standard money
   sell:
     sold:

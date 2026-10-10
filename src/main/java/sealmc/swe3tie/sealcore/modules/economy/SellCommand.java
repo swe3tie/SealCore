@@ -230,9 +230,14 @@ public final class SellCommand implements Listener {
         inventory.setItem(config.summarySlot(), summary.item().createItem(player, this.module.core().lang(),
             SellProgress.placeholders(category, paid, summary.item().name())));
 
+        for (int slot : config.allProgressSlots()) {
+            inventory.setItem(slot, null);
+        }
+
+        List<Integer> pageSlots = config.slotsForPage(page);
         List<SellProgress.Threshold> thresholds = SellProgress.thresholds();
-        int start = (page - 1) * config.slots().size();
-        for (int i = 0; i < config.slots().size(); i++) {
+        int start = config.startIndex(page);
+        for (int i = 0; i < pageSlots.size(); i++) {
             int index = start + i;
             if (index >= thresholds.size()) break;
             SellProgress.Threshold threshold = thresholds.get(index);
@@ -240,7 +245,7 @@ public final class SellCommand implements Listener {
                 ? config.completed().item() : (SellProgress.next(paid) == threshold ? config.inProgress().item() : config.incomplete().item());
             Map<String, String> placeholders = SellProgress.thresholdPlaceholders(category, paid, threshold,
                 "<green>■", "<dark_gray>■", summary.item().name());
-            inventory.setItem(config.slots().get(i), definition.createItem(player, this.module.core().lang(), placeholders));
+            inventory.setItem(pageSlots.get(i), definition.createItem(player, this.module.core().lang(), placeholders));
         }
         inventory.setItem(config.previousSlot(), page > 1 ? config.previous().createItem(player, this.module.core().lang()) : null);
         inventory.setItem(config.nextSlot(), page < maxPage ? config.next().createItem(player, this.module.core().lang()) : null);
@@ -337,10 +342,10 @@ public final class SellCommand implements Listener {
 
     private Component buildProgressTitle(@NotNull Player player, @NotNull SellCategory category, int page, int maxPage) {
         SellGuiConfig.CategoryButton button = this.module.guiConfig().categoryButton(category);
-        String sectionName = button != null && !button.item().name().isBlank()
-            ? button.item().name() : SellProgress.categoryLabel(category);
+        String configuredName = button != null ? button.item().name() : "";
+        String sectionName = SellProgress.configuredCategoryLabel(category, configuredName);
         return this.module.core().lang().parse(this.module.guiConfig().progress().title(), player,
-            Placeholder.parsed("section", sectionName),
+            Placeholder.parsed("section", "<dark_gray>" + sectionName + "</dark_gray>"),
             Placeholder.unparsed("current_page", Integer.toString(page)),
             Placeholder.unparsed("max_page", Integer.toString(maxPage)));
     }

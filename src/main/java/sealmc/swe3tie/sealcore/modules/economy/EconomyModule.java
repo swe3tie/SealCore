@@ -26,7 +26,8 @@ public final class EconomyModule extends SealModule {
 
     private final ItemPriceService priceService = new ItemPriceService();
     private final YamlFile pricesFile = this.resolveFile("prices.yml");
-    private final YamlFile guiFile = this.resolveFile("gui/sell.yml");
+    private final YamlFile sellGuiFile = this.resolveGuiFile("sell-gui.yml");
+    private final YamlFile multiplierGuiFile = this.resolveGuiFile("sell-multiplier.yml");
     private final BalanceCommand balanceCommand = new BalanceCommand(this);
     private final PayCommand payCommand = new PayCommand(this);
     private final SellCommand sellCommand = new SellCommand(this);
@@ -93,7 +94,15 @@ public final class EconomyModule extends SealModule {
 
     private void loadEconomyFiles() throws ConfigException {
         this.priceService.load(this.pricesFile.load().getConfigurationSection("prices"));
-        this.guiConfig = SellGuiConfig.load(this.guiFile.load());
+        this.guiConfig = SellGuiConfig.load(this.sellGuiFile.load(), this.multiplierGuiFile.load());
+    }
+
+    private YamlFile resolveGuiFile(String filename) {
+        java.nio.file.Path direct = this.core().getDataFolder().toPath().resolve("modules/economy/" + filename);
+        if (java.nio.file.Files.exists(direct)) {
+            return this.resolveFile(filename);
+        }
+        return this.resolveFile("gui/" + filename);
     }
 
     @Override
