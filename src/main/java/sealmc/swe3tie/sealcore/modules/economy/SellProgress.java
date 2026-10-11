@@ -60,9 +60,20 @@ public final class SellProgress {
 
     @NotNull
     public static String bar(double paid, Threshold target, @NotNull String complete, @NotNull String incomplete) {
-        int filled = target == null ? BAR_LENGTH : (int) Math.round(percentage(paid, target) / 100D * BAR_LENGTH);
-        filled = Math.max(0, Math.min(BAR_LENGTH, filled));
-        return complete.repeat(filled) + incomplete.repeat(BAR_LENGTH - filled);
+        return bar(paid, target, complete, incomplete, BAR_LENGTH);
+    }
+
+    @NotNull
+    public static String bar(double paid, Threshold target, @NotNull String complete, @NotNull String incomplete, int length) {
+        int safeLength = Math.max(1, length);
+        int filled = target == null ? safeLength : (int) Math.round(percentage(paid, target) / 100D * safeLength);
+        filled = Math.max(0, Math.min(safeLength, filled));
+        return complete.repeat(filled) + incomplete.repeat(safeLength - filled);
+    }
+
+    @NotNull
+    public static String bar(double paid, Threshold target, @NotNull BarConfig config) {
+        return bar(paid, target, config.complete(), config.incomplete(), config.length());
     }
 
     /** Returns cumulative target for next multiplier, or final target when maxed. */
@@ -108,10 +119,11 @@ public final class SellProgress {
         return placeholders(category, paid, categoryLabel(category));
     }
 
-    /** Complete placeholder map using the configured category item name for {SECTION}. */
+    /** Complete placeholder map using the configured category item name and custom progress bar. */
     @NotNull
     public static Map<String, String> placeholders(@NotNull SellCategory category, double paid,
-                                                   @NotNull String configuredName) {
+                                                   @NotNull String configuredName,
+                                                   @NotNull BarConfig barConfig) {
         Threshold target = next(paid);
         double required = target == null ? THRESHOLDS.getLast().required() : target.required();
         double current = Math.max(0D, paid);
@@ -131,8 +143,40 @@ public final class SellProgress {
             Map.entry("REMAINING", MoneyFormat.formatStandard(remaining)),
             Map.entry("REMAINING_FORMATTED", MoneyFormat.formatCompact(remaining)),
             Map.entry("PERCENTAGE", percentageText(paid, target)),
-            Map.entry("PROGRESS_BAR", bar(paid, target, "<#9CC0D9>■", "<dark_gray>■"))
+            Map.entry("PROGRESS_BAR", bar(paid, target, barConfig))
         );
+    }
+
+    /** Complete placeholder map using the configured category item name for {SECTION}. */
+    @NotNull
+    public static Map<String, String> placeholders(@NotNull SellCategory category, double paid,
+                                                   @NotNull String configuredName) {
+        return placeholders(category, paid, configuredName, BarConfig.DEFAULT);
+    }
+
+    /** Milestone placeholder map using configured category name and shared progress bar config. */
+    @NotNull
+    public static Map<String, String> thresholdPlaceholders(@NotNull SellCategory category, double paid,
+                                                            Threshold target, @NotNull String configuredName,
+                                                            @NotNull BarConfig barConfig) {
+        double current = Math.max(0D, paid);
+        double required = target == null ? THRESHOLDS.getLast().required() : target.required();
+        double progress = progressAmount(paid, target);
+        Map<String, String> values = new java.util.HashMap<>(placeholders(category, paid, configuredName, barConfig));
+        values.put("MULTIPLIER", formatMultiplier(target == null ? MAX_MULTIPLIER : target.multiplier()));
+        values.put("CURRENT", MoneyFormat.formatStandard(current));
+        values.put("CURRENT_FORMATTED", MoneyFormat.formatCompact(current));
+        values.put("NEED", MoneyFormat.formatStandard(required));
+        values.put("NEED_FORMATTED", MoneyFormat.formatCompact(required));
+        values.put("TARGET", MoneyFormat.formatStandard(required));
+        values.put("TARGET_FORMATTED", MoneyFormat.formatCompact(required));
+        values.put("NEXT_TARGET", MoneyFormat.formatStandard(required));
+        values.put("NEXT_TARGET_FORMATTED", MoneyFormat.formatCompact(required));
+        values.put("REMAINING", MoneyFormat.formatStandard(thresholdRemaining(paid, target)));
+        values.put("REMAINING_FORMATTED", MoneyFormat.formatCompact(thresholdRemaining(paid, target)));
+        values.put("PERCENTAGE", percentageText(progress, target));
+        values.put("PROGRESS_BAR", bar(progress, target, barConfig));
+        return Map.copyOf(values);
     }
 
     /** Placeholder map for one milestone pane; NEED/TARGET identify that milestone. */
@@ -148,24 +192,7 @@ public final class SellProgress {
     public static Map<String, String> thresholdPlaceholders(@NotNull SellCategory category, double paid,
                                                             Threshold target, @NotNull String complete,
                                                             @NotNull String incomplete, @NotNull String configuredName) {
-        double current = Math.max(0D, paid);
-        double required = target == null ? THRESHOLDS.getLast().required() : target.required();
-        double progress = progressAmount(paid, target);
-        Map<String, String> values = new java.util.HashMap<>(placeholders(category, paid, configuredName));
-        values.put("MULTIPLIER", formatMultiplier(target == null ? MAX_MULTIPLIER : target.multiplier()));
-        values.put("CURRENT", MoneyFormat.formatStandard(current));
-        values.put("CURRENT_FORMATTED", MoneyFormat.formatCompact(current));
-        values.put("NEED", MoneyFormat.formatStandard(required));
-        values.put("NEED_FORMATTED", MoneyFormat.formatCompact(required));
-        values.put("TARGET", MoneyFormat.formatStandard(required));
-        values.put("TARGET_FORMATTED", MoneyFormat.formatCompact(required));
-        values.put("NEXT_TARGET", MoneyFormat.formatStandard(required));
-        values.put("NEXT_TARGET_FORMATTED", MoneyFormat.formatCompact(required));
-        values.put("REMAINING", MoneyFormat.formatStandard(thresholdRemaining(paid, target)));
-        values.put("REMAINING_FORMATTED", MoneyFormat.formatCompact(thresholdRemaining(paid, target)));
-        values.put("PERCENTAGE", percentageText(progress, target));
-        values.put("PROGRESS_BAR", bar(progress, target, complete, incomplete));
-        return Map.copyOf(values);
+        return thresholdPlaceholders(category, paid, target, configuredName, new BarConfig(BAR_LENGTH, complete, incomplete));
     }
 
     /**
@@ -215,5 +242,13 @@ public final class SellProgress {
     }
 
     public record Threshold(double multiplier, double required) {
+    }
+
+    public record BarConfig(int length, @NotNull String complete, @NotNull String incomplete) {
+        public static final BarConfig DEFAULT = new BarConfig(BAR_LENGTH, "<#9CC0D9>■", "<dark_gray>■");
+
+        public BarConfig {
+            if (length < 1) length = BAR_LENGTH;
+        }
     }
 }

@@ -41,7 +41,7 @@ Command names and aliases are registered during server startup. Restart the serv
 | `plugins/SealCore/modules/economy/config.yml` | Economy command names, permissions, limits, and cooldown. |
 | `plugins/SealCore/modules/economy/prices.yml` | Per-item sell prices, including potion and enchanted-book keys. |
 | `plugins/SealCore/modules/economy/gui/sell-gui.yml` | `/sell` title, rows, input slots, and category buttons. |
-| `plugins/SealCore/modules/economy/gui/sell-multiplier.yml` | Category sell progression GUI, page slots, navigation, and state panes. |
+| `plugins/SealCore/modules/economy/gui/sell-multiplier.yml` | Category sell progression GUI, page slots, navigation, state panes, and shared progress bar. |
 
 Missing default keys are merged into existing files without replacing user values. Keep module files inside their module directory when adding module-specific configuration.
 

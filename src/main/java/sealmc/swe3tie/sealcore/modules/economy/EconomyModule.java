@@ -7,11 +7,18 @@ import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.SealCore;
 import sealmc.swe3tie.sealcore.core.hook.Hook;
 import sealmc.swe3tie.sealcore.core.config.ConfigException;
+import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.YamlConfiguration;
 import sealmc.swe3tie.sealcore.core.config.YamlFile;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
 import sealmc.swe3tie.sealcore.core.module.SealModule;
 import sealmc.swe3tie.sealcore.core.storage.StorageService;
+import sealmc.swe3tie.sealcore.modules.economy.gui.PaginationConfig;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellGuiConfig;
+import sealmc.swe3tie.sealcore.modules.economy.gui.WorthGuiConfig;
+import sealmc.swe3tie.sealcore.modules.economy.packet.WorthInventoryListener;
+import sealmc.swe3tie.sealcore.modules.economy.packet.WorthLoreConfig;
+import sealmc.swe3tie.sealcore.modules.economy.packet.WorthPacketListener;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.sql.Statement;
@@ -28,11 +35,17 @@ public final class EconomyModule extends SealModule {
     private final YamlFile pricesFile = this.resolveFile("prices.yml");
     private final YamlFile sellGuiFile = this.resolveGuiFile("sell-gui.yml");
     private final YamlFile multiplierGuiFile = this.resolveGuiFile("sell-multiplier.yml");
+    private final YamlFile worthGuiFile = this.resolveGuiFile("worth-gui.yml");
     private final BalanceCommand balanceCommand = new BalanceCommand(this);
     private final PayCommand payCommand = new PayCommand(this);
     private final SellCommand sellCommand = new SellCommand(this);
+    private final WorthCommand worthCommand = new WorthCommand(this);
     private volatile ProgressStore progressStore;
     private volatile SellGuiConfig guiConfig;
+    private volatile WorthGuiConfig worthGuiConfig;
+    private volatile WorthLoreConfig worthLoreConfig = WorthLoreConfig.load(null);
+    private volatile PaginationConfig paginationConfig = PaginationConfig.DEFAULT;
+    private WorthPacketListener packetListener;
 
     public EconomyModule(@NotNull SealCore core) {
         super(core, "economy");
@@ -79,10 +92,22 @@ public final class EconomyModule extends SealModule {
 
         this.listen(new EconomyJoinListener(this));
         this.listen(this.sellCommand);
+        this.listen(this.worthCommand);
 
         this.balanceCommand.register();
         this.payCommand.register();
         this.sellCommand.register();
+        this.worthCommand.register();
+
+        if (this.core.hooks().isAvailable(Hook.PACKETEVENTS)) {
+            try {
+                this.packetListener = new WorthPacketListener(this.priceService, this.worthLoreConfig);
+                this.packetListener.register();
+                this.listen(new WorthInventoryListener(this));
+            } catch (LinkageError | RuntimeException e) {
+                this.core.getLogger().log(java.util.logging.Level.WARNING, "Could not register PacketEvents worth listener", e);
+            }
+        }
 
         this.registerPlaceholders(this::resolvePlaceholder);
     }
@@ -94,7 +119,30 @@ public final class EconomyModule extends SealModule {
 
     private void loadEconomyFiles() throws ConfigException {
         this.priceService.load(this.pricesFile.load().getConfigurationSection("prices"));
-        this.guiConfig = SellGuiConfig.load(this.sellGuiFile.load(), this.multiplierGuiFile.load());
+
+        ConfigurationSection worthLoreSection = this.config().getConfigurationSection("worth-lore");
+        if (worthLoreSection == null) {
+            worthLoreSection = this.core.config().mainFile().load().getConfigurationSection("economy.worth-lore");
+        }
+        if (worthLoreSection == null) {
+            worthLoreSection = this.core.config().mainFile().load().getConfigurationSection("worth-lore");
+        }
+        this.worthLoreConfig = WorthLoreConfig.load(worthLoreSection);
+        if (this.packetListener != null) {
+            this.packetListener.setConfig(this.worthLoreConfig);
+        }
+
+        ConfigurationSection paginationSection = this.config().getConfigurationSection("pagination");
+        if (paginationSection == null) {
+            paginationSection = this.core.config().mainFile().load().getConfigurationSection("economy.pagination");
+        }
+        if (paginationSection == null) {
+            paginationSection = this.core.config().mainFile().load().getConfigurationSection("pagination");
+        }
+        this.paginationConfig = PaginationConfig.load(paginationSection);
+
+        this.guiConfig = SellGuiConfig.load(this.sellGuiFile.load(), this.multiplierGuiFile.load(), this.paginationConfig);
+        this.worthGuiConfig = WorthGuiConfig.load(this.worthGuiFile.load(), this.paginationConfig);
     }
 
     private YamlFile resolveGuiFile(String filename) {
@@ -108,6 +156,14 @@ public final class EconomyModule extends SealModule {
     @Override
     protected void onDisable() {
         this.sellCommand.closeAll();
+        this.worthCommand.closeAll();
+        if (this.packetListener != null) {
+            try {
+                this.packetListener.unregister();
+            } catch (LinkageError | RuntimeException ignored) {
+            }
+            this.packetListener = null;
+        }
         this.payCommand.clearCooldowns();
         ProgressStore store = this.progressStore;
         if (store != null) store.clear();
@@ -131,6 +187,23 @@ public final class EconomyModule extends SealModule {
         SellGuiConfig current = this.guiConfig;
         if (current == null) throw new IllegalStateException("sell GUI config not loaded");
         return current;
+    }
+
+    @NotNull
+    public WorthGuiConfig worthGuiConfig() {
+        WorthGuiConfig current = this.worthGuiConfig;
+        if (current == null) return WorthGuiConfig.load(null);
+        return current;
+    }
+
+    @NotNull
+    public WorthLoreConfig worthLoreConfig() {
+        return this.worthLoreConfig;
+    }
+
+    @NotNull
+    public PaginationConfig paginationConfig() {
+        return this.paginationConfig;
     }
 
     @Nullable

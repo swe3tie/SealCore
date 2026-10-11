@@ -17,6 +17,13 @@ page-slots:
 summary-slot: 50
 previous-slot: 46
 next-slot: 54
+
+# Cấu hình thanh tiến trình {PROGRESS_BAR} dùng chung cho cả giao diện /sell và giao diện tiến độ.
+progress-bar:
+  length: 16
+  complete: '<#9CC0D9>■'
+  incomplete: '<dark_gray>■'
+
 previous:
   material: ARROW
   name: '<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ'

@@ -23,6 +23,7 @@ import sealmc.swe3tie.sealcore.core.hook.Hook;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellGuiConfig;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellInventoryHolder;
+import sealmc.swe3tie.sealcore.modules.economy.util.ContainerHelper;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.util.ArrayList;
@@ -99,11 +100,12 @@ public final class SellCommand implements Listener {
 
     private void placeCategoryButtons(@NotNull Player player, @NotNull Inventory inventory, @NotNull SellGuiConfig gui,
                                       @NotNull Map<SellCategory, Double> progress) {
+        SellProgress.BarConfig barConfig = gui.progressBar();
         for (SellCategory category : SellCategory.values()) {
             double paid = progress.getOrDefault(category, 0D);
             SellGuiConfig.CategoryButton button = gui.categoryButton(category);
             inventory.setItem(button.slot(), button.item().createItem(player, this.module.core().lang(),
-                SellProgress.placeholders(category, paid, button.item().name())));
+                SellProgress.placeholders(category, paid, button.item().name(), barConfig)));
         }
     }
 
@@ -226,9 +228,10 @@ public final class SellCommand implements Listener {
     private void populateProgress(@NotNull Player player, @NotNull Inventory inventory, @NotNull SellCategory category,
                                   int page, int maxPage, double paid) {
         SellGuiConfig.ProgressConfig config = this.module.guiConfig().progress();
+        SellProgress.BarConfig barConfig = this.module.guiConfig().progressBar();
         SellGuiConfig.CategoryButton summary = this.module.guiConfig().categoryButton(category);
         inventory.setItem(config.summarySlot(), summary.item().createItem(player, this.module.core().lang(),
-            SellProgress.placeholders(category, paid, summary.item().name())));
+            SellProgress.placeholders(category, paid, summary.item().name(), barConfig)));
 
         for (int slot : config.allProgressSlots()) {
             inventory.setItem(slot, null);
@@ -244,18 +247,19 @@ public final class SellCommand implements Listener {
             SellGuiConfig.ItemDefinition definition = paid >= threshold.required()
                 ? config.completed().item() : (SellProgress.next(paid) == threshold ? config.inProgress().item() : config.incomplete().item());
             Map<String, String> placeholders = SellProgress.thresholdPlaceholders(category, paid, threshold,
-                "<green>■", "<dark_gray>■", summary.item().name());
+                summary.item().name(), barConfig);
             inventory.setItem(pageSlots.get(i), definition.createItem(player, this.module.core().lang(), placeholders));
         }
-        inventory.setItem(config.previousSlot(), page > 1 ? config.previous().createItem(player, this.module.core().lang()) : null);
-        inventory.setItem(config.nextSlot(), page < maxPage ? config.next().createItem(player, this.module.core().lang()) : null);
+        boolean pagination = config.paginationEnabled();
+        inventory.setItem(config.previousSlot(), (pagination && page > 1) ? config.previous().createItem(player, this.module.core().lang()) : null);
+        inventory.setItem(config.nextSlot(), (pagination && page < maxPage) ? config.next().createItem(player, this.module.core().lang()) : null);
     }
 
     private void handleProgressClick(@NotNull Player player, @NotNull SellInventoryHolder holder, int rawSlot) {
         SellGuiConfig.ProgressConfig config = this.module.guiConfig().progress();
-        if (rawSlot == config.previousSlot() && holder.page() > 1) {
+        if (config.paginationEnabled() && rawSlot == config.previousSlot() && holder.page() > 1) {
             this.changeProgressPage(player, holder, holder.page() - 1);
-        } else if (rawSlot == config.nextSlot() && holder.page() < config.pageCount()) {
+        } else if (config.paginationEnabled() && rawSlot == config.nextSlot() && holder.page() < config.pageCount()) {
             this.changeProgressPage(player, holder, holder.page() + 1);
         }
     }
@@ -280,6 +284,29 @@ public final class SellCommand implements Listener {
             ItemStack stack = inventory.getItem(slot);
             if (stack == null || stack.isEmpty() || stack.getType().isAir()) continue;
             inventory.setItem(slot, null);
+
+            if (ContainerHelper.isShulkerBox(stack)) {
+                List<ItemStack> inner = ContainerHelper.getShulkerItems(stack);
+                if (!inner.isEmpty()) {
+                    ContainerHelper.ContainerResult result = ContainerHelper.processContainerContents(inner, this.module.priceService());
+                    result.totals().forEach((cat, amt) -> baseTotals.merge(cat, amt, Double::sum));
+                    ItemStack returnShulker = stack.clone();
+                    ContainerHelper.setShulkerItems(returnShulker, result.remainingUnsellable());
+                    unsellable.add(returnShulker);
+                    continue;
+                }
+            } else if (ContainerHelper.isBundle(stack)) {
+                List<ItemStack> inner = ContainerHelper.getBundleItems(stack);
+                if (!inner.isEmpty()) {
+                    ContainerHelper.ContainerResult result = ContainerHelper.processContainerContents(inner, this.module.priceService());
+                    result.totals().forEach((cat, amt) -> baseTotals.merge(cat, amt, Double::sum));
+                    ItemStack returnBundle = stack.clone();
+                    ContainerHelper.setBundleItems(returnBundle, result.remainingUnsellable());
+                    unsellable.add(returnBundle);
+                    continue;
+                }
+            }
+
             double itemTotal = this.module.priceService().getItemPrice(stack);
             SellCategory category = this.module.priceService().category(stack);
             if (itemTotal > 0D && category != null) baseTotals.merge(category, itemTotal, Double::sum);

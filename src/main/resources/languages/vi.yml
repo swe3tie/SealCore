@@ -108,3 +108,8 @@ economy:
     sold:
       chat: '<green>+${MONEY_FORMATTED}</green>'
       actionbar: '<green>+${MONEY_FORMATTED}</green>'
+
+  # Lệnh tra cứu giá trị vật phẩm (/worth).
+  worth:
+    title: 'ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ — {PAGE}/{MAX_PAGE}'
+

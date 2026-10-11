@@ -46,5 +46,27 @@ class SellGuiConfigTest {
         assertNotNull(progress.inProgress());
         assertNotNull(progress.completed());
         assertNotNull(progress.incomplete());
+
+        assertEquals(16, config.progressBar().length());
+        assertEquals("<#9CC0D9>■", config.progressBar().complete());
+        assertEquals("<dark_gray>■", config.progressBar().incomplete());
+    }
+
+    @Test
+    void disablesPaginationInMultiplierGui() throws Exception {
+        YamlConfiguration sellGui = new YamlConfiguration();
+        try (var in = Objects.requireNonNull(getClass().getResourceAsStream("/modules/economy/gui/sell-gui.yml"))) {
+            sellGui.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
+
+        YamlConfiguration multiplierGui = new YamlConfiguration();
+        try (var in = Objects.requireNonNull(getClass().getResourceAsStream("/modules/economy/gui/sell-multiplier.yml"))) {
+            multiplierGui.load(new InputStreamReader(in, StandardCharsets.UTF_8));
+        }
+
+        PaginationConfig paginationConfig = new PaginationConfig(false, false, false, null, null);
+        SellGuiConfig config = SellGuiConfig.load(sellGui, multiplierGui, paginationConfig);
+
+        assertEquals(1, config.progress().pageCount());
     }
 }

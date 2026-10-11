@@ -48,6 +48,7 @@ dependencies {
     testImplementation("org.junit.jupiter:junit-jupiter")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     testImplementation("io.papermc.paper:paper-api:$paperApiVersion")
+    testCompileOnly("com.github.retrooper:packetevents-spigot:2.14.0")
 }
 
 /** `<version>+<branch>.<commit>` so the server reports exactly which commit is running. */
@@ -90,7 +91,8 @@ tasks {
 
     test {
         useJUnitPlatform()
-        systemProperty("java.io.tmpdir", System.getProperty("java.io.tmpdir"))
+        val tmp = System.getenv("TMPDIR") ?: System.getProperty("java.io.tmpdir")
+        systemProperty("java.io.tmpdir", tmp)
     }
 
     // Optional local plugin jars for smoke tests: -PtestPlugins=/path/to/plugins

@@ -9,6 +9,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.core.config.ConfigException;
 import sealmc.swe3tie.sealcore.core.lang.LangService;
 import sealmc.swe3tie.sealcore.modules.economy.SellCategory;
@@ -29,14 +30,17 @@ public final class SellGuiConfig {
     private final Set<Integer> sellSlots;
     private final Map<SellCategory, CategoryButton> categoryButtons;
     private final ProgressConfig progress;
+    private final SellProgress.BarConfig progressBar;
 
     private SellGuiConfig(String title, int rows, Set<Integer> sellSlots,
-                          Map<SellCategory, CategoryButton> categoryButtons, ProgressConfig progress) {
+                          Map<SellCategory, CategoryButton> categoryButtons,
+                          ProgressConfig progress, SellProgress.BarConfig progressBar) {
         this.title = title;
         this.rows = rows;
         this.sellSlots = sellSlots;
         this.categoryButtons = categoryButtons;
         this.progress = progress;
+        this.progressBar = progressBar;
     }
 
     @NotNull
@@ -47,6 +51,13 @@ public final class SellGuiConfig {
     @NotNull
     public static SellGuiConfig load(@NotNull YamlConfiguration sellConfig,
                                      @NotNull YamlConfiguration multiplierConfig) throws ConfigException {
+        return load(sellConfig, multiplierConfig, null);
+    }
+
+    @NotNull
+    public static SellGuiConfig load(@NotNull YamlConfiguration sellConfig,
+                                     @NotNull YamlConfiguration multiplierConfig,
+                                     @Nullable PaginationConfig paginationConfig) throws ConfigException {
         String title = sellConfig.getString("title", "<dark_gray>Sell items: <green>{TOTAL_FORMATTED}");
         if (title == null || title.isBlank()) throw new ConfigException("GUI sell title cannot be empty");
         title = title.replace("${TOTAL}", "{TOTAL}").replace("${TOTAL_FORMATTED}", "{TOTAL_FORMATTED}");
@@ -76,7 +87,9 @@ public final class SellGuiConfig {
             buttons.put(category, new CategoryButton(category, slot, readItem(section, category.id())));
         }
 
-        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), Map.copyOf(buttons), readProgress(multiplierConfig));
+        SellProgress.BarConfig progressBar = readProgressBar(multiplierConfig, sellConfig);
+        return new SellGuiConfig(title, rows, Set.copyOf(sellSlots), Map.copyOf(buttons),
+            readProgress(multiplierConfig, paginationConfig), progressBar);
     }
 
     @NotNull public String title() { return this.title; }
@@ -86,8 +99,9 @@ public final class SellGuiConfig {
     @NotNull public Map<SellCategory, CategoryButton> categoryButtons() { return this.categoryButtons; }
     @NotNull public CategoryButton categoryButton(@NotNull SellCategory category) { return this.categoryButtons.get(category); }
     @NotNull public ProgressConfig progress() { return this.progress; }
+    @NotNull public SellProgress.BarConfig progressBar() { return this.progressBar; }
 
-    private static ProgressConfig readProgress(ConfigurationSection config) throws ConfigException {
+    private static ProgressConfig readProgress(ConfigurationSection config, @Nullable PaginationConfig paginationConfig) throws ConfigException {
         if (config == null) throw new ConfigException("GUI sell progress section is missing");
         ConfigurationSection section = config.getConfigurationSection("progress");
         if (section == null) section = config;
@@ -109,10 +123,31 @@ public final class SellGuiConfig {
         Pane inProgress = new Pane("in-progress", readItem(required(panes, "in-progress"), "in-progress"));
         Pane completed = new Pane("completed", readItem(required(panes, "completed"), "completed"));
         Pane incomplete = new Pane("incomplete", readItem(required(panes, "incomplete"), "incomplete"));
-        ItemDefinition previousItem = readItem(required(section, "previous"), "previous");
-        ItemDefinition nextItem = readItem(required(section, "next"), "next");
+
+        ItemDefinition defaultPrev = paginationConfig != null && paginationConfig.previousItem() != null
+            ? new ItemDefinition("previous", paginationConfig.previousItem().material(), paginationConfig.previousItem().name(), paginationConfig.previousItem().lore())
+            : new ItemDefinition("previous", Material.ARROW, "<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ", List.of("<white>Nhấp để quay về trang trước"));
+        ItemDefinition defaultNext = paginationConfig != null && paginationConfig.nextItem() != null
+            ? new ItemDefinition("next", paginationConfig.nextItem().material(), paginationConfig.nextItem().name(), paginationConfig.nextItem().lore())
+            : new ItemDefinition("next", Material.ARROW, "<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ", List.of("<white>Nhấp để sang trang sau"));
+
+        ItemDefinition previousItem = section.contains("previous")
+            ? readItem(required(section, "previous"), "previous")
+            : defaultPrev;
+        ItemDefinition nextItem = section.contains("next")
+            ? readItem(required(section, "next"), "next")
+            : defaultNext;
+
+        boolean filePagination = true;
+        if (section.isBoolean("pagination")) {
+            filePagination = section.getBoolean("pagination");
+        } else if (section.isConfigurationSection("pagination")) {
+            filePagination = section.getBoolean("pagination.enabled", true);
+        }
+        boolean paginationEnabled = filePagination && (paginationConfig == null || paginationConfig.sellMultiplierEnabled());
+
         return new ProgressConfig(section.getString("title", "<dark_gray>Progress {SECTION} — {CURRENT_PAGE}/{MAX_PAGE}"),
-            rows, List.copyOf(slots), pageSlots, summary, previous, next, inProgress, completed, incomplete, previousItem, nextItem);
+            rows, List.copyOf(slots), pageSlots, summary, previous, next, inProgress, completed, incomplete, previousItem, nextItem, paginationEnabled);
     }
 
     /**
@@ -183,6 +218,33 @@ public final class SellGuiConfig {
         }
     }
 
+    private static SellProgress.BarConfig readProgressBar(ConfigurationSection multiplierConfig,
+                                                          ConfigurationSection sellConfig) throws ConfigException {
+        ConfigurationSection section = null;
+        if (multiplierConfig != null) {
+            section = multiplierConfig.getConfigurationSection("progress-bar");
+            if (section == null) section = multiplierConfig.getConfigurationSection("progress.progress-bar");
+        }
+        if (section == null && sellConfig != null) {
+            section = sellConfig.getConfigurationSection("progress-bar");
+        }
+        if (section == null) return SellProgress.BarConfig.DEFAULT;
+
+        int length = section.getInt("length", SellProgress.BAR_LENGTH);
+        if (length < 1 || length > 64) {
+            throw new ConfigException("GUI progress-bar length must be between 1 and 64: " + length);
+        }
+        String complete = section.getString("complete", "<#9CC0D9>■");
+        if (complete == null || complete.isBlank()) {
+            throw new ConfigException("GUI progress-bar complete cannot be empty");
+        }
+        String incomplete = section.getString("incomplete", "<dark_gray>■");
+        if (incomplete == null || incomplete.isBlank()) {
+            throw new ConfigException("GUI progress-bar incomplete cannot be empty");
+        }
+        return new SellProgress.BarConfig(length, complete, incomplete);
+    }
+
     private static Set<Integer> readSlots(List<Integer> values, int size, String path) throws ConfigException {
         Set<Integer> slots = new LinkedHashSet<>();
         for (Integer value : values) slots.add(readSingleSlot(value, size, path));
@@ -202,11 +264,22 @@ public final class SellGuiConfig {
         @NotNull String title, int rows, @NotNull List<Integer> slots,
         @NotNull Map<Integer, List<Integer>> pageSlots, int summarySlot, int previousSlot, int nextSlot,
         @NotNull Pane inProgress, @NotNull Pane completed, @NotNull Pane incomplete,
-        @NotNull ItemDefinition previous, @NotNull ItemDefinition next
+        @NotNull ItemDefinition previous, @NotNull ItemDefinition next,
+        boolean paginationEnabled
     ) {
+        public ProgressConfig(
+            @NotNull String title, int rows, @NotNull List<Integer> slots,
+            @NotNull Map<Integer, List<Integer>> pageSlots, int summarySlot, int previousSlot, int nextSlot,
+            @NotNull Pane inProgress, @NotNull Pane completed, @NotNull Pane incomplete,
+            @NotNull ItemDefinition previous, @NotNull ItemDefinition next
+        ) {
+            this(title, rows, slots, pageSlots, summarySlot, previousSlot, nextSlot, inProgress, completed, incomplete, previous, next, true);
+        }
+
         public int size() { return this.rows * 9; }
 
         public int pageCount() {
+            if (!this.paginationEnabled) return 1;
             return this.pageSlots.keySet().stream().mapToInt(Integer::intValue).max().orElse(1);
         }
 

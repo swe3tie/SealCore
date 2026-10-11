@@ -6,6 +6,7 @@
 # Category button placeholders: {MULTIPLIER}, {NEXT_MULTIPLIER}, {CURRENT}, {CURRENT_FORMATTED},
 # {NEXT_TARGET}, {NEXT_TARGET_FORMATTED}, {REMAINING}, {REMAINING_FORMATTED}, {PERCENTAGE}, {PROGRESS_BAR}, {SECTION}.
 # Title placeholders: {TOTAL}, {TOTAL_FORMATTED}.
+# Cấu hình thanh {PROGRESS_BAR} nằm trong sell-multiplier.yml (progress-bar) và được dùng chung cho cả 2 GUI.
 
 config-version: 2
 
