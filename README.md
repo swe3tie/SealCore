@@ -1,97 +1,85 @@
 # SealCore
 
-All-in-one economy SMP plugin for Paper and Folia. SealCore ships as one plugin jar and supports Folia region scheduling.
+Plugin lõi (All-in-One Core) cho máy chủ Minecraft **Economy SMP**, tối ưu hóa và tương thích hoàn toàn với cả **Paper** và **Folia** (hỗ trợ đa luồng theo vùng - Regionized Multithreading).
 
-## Features
+SealCore tập trung vào việc kiến tạo trải nghiệm gameplay sinh tồn kinh tế cân bằng, tương tác giao diện (GUI) mượt mà, cùng hệ thống tính năng phong phú phục vụ cộng đồng người chơi.
 
-- `/balance` and `/bal` show player balances.
-- `/pay <player> <amount>` transfers money between players, with cooldown and amount limits.
-- `/sell` opens a configurable sell GUI and pays for configured item prices when the inventory closes.
-- Economy commands accept compact amounts such as `10k`, `1.5m`, `2b`, and `5t`.
-- English and Vietnamese language files with MiniMessage formatting.
-- SQLite or MySQL/MariaDB storage through a shared connection pool.
-- Optional ExcellentEconomy, PlaceholderAPI, and PacketEvents integrations.
-- Runtime module enable/disable/reload support through `/sealcore` admin commands.
+---
 
-## Requirements
+## Tính năng Gameplay nổi bật
 
-- Paper or Folia server compatible with the API declared in [`paper-plugin.yml`](src/main/resources/paper-plugin.yml).
-- Java 25 to build the project. The plugin targets Java 21 bytecode.
-- ExcellentEconomy for economy-backed features such as balances, payments, and selling.
+### 1. Hệ thống Kinh Tế Toàn Diện (Economy)
+- **Giao diện Bán Hàng Trực Quan (`/sell`)**:
+  - Kéo thả tự do vật phẩm vào GUI, hệ thống tự động quét và tính toán tổng số tiền theo thời gian thực.
+  - Nhận tiền ngay lập tức khi đóng giao diện. Các vật phẩm không có giá bán được hoàn trả an toàn về túi đồ.
+- **Hệ số nhân Bán Hàng (Sell Multiplier / Progression)**:
+  - Cày cuốc để nâng cấp các mốc bán hàng theo từng nhóm danh mục (Nông sản, Khoáng sản, Mob drops...).
+  - Mở khóa cấp độ để gia tăng vĩnh viễn % tiền thưởng khi bán đồ (ví dụ: +5%, +10%, +25%).
+- **Cửa Hàng Máy Chủ Đa Dạng (`/shop`)**:
+  - Giao diện mua sắm phân loại theo danh mục: Lương thực, Trang bị, Nether, The End, Shards...
+  - Menu chọn số lượng (`/shop amount`) linh hoạt: hỗ trợ tăng/giảm số lượng nhanh, mua tối đa theo sức chứa túi đồ hoặc theo số dư hiện có.
+- **Lịch Sử Giao Dịch Bán (`/sell history`)**:
+  - Lưu trữ và hiển thị trực quan các đợt bán đồ gần nhất giúp người chơi dễ dàng theo dõi thu nhập.
+- **Soi Giá Trị Vật Phẩm (Packet Worth Lore)**:
+  - Xem trực tiếp giá bán của vật phẩm ngay trên dòng thông tin (lore) trong túi đồ mà không làm thay đổi dữ liệu (NBT) gốc của item.
+  - Lệnh `/worth` hỗ trợ tra cứu nhanh giá bán của vật phẩm đang cầm trên tay.
+- **Giao Dịch Linh Hoạt (`/pay`, `/balance`)**:
+  - Hỗ trợ nhập số tiền viết tắt thông minh và tiện lợi (ví dụ: `10k`, `1.5m`, `2b`, `5t`).
+  - Tích hợp thời gian chờ (cooldown) và hạn mức giao dịch để ngăn chặn lạm dụng và gian lận.
 
-Optional integrations are detected when installed. They are not bundled into SealCore.
+### 2. Trải Nghiệm Người Chơi & Hiệu Năng
+- **Giao diện & Tin nhắn chuẩn MiniMessage**: Hỗ trợ màu sắc gradient, hex color hiện đại, định dạng trực quan.
+- **Đa ngôn ngữ**: Đi kèm sẵn gói ngôn ngữ Tiếng Việt (`vi.yml`) và Tiếng Anh (`en.yml`).
+- **Tối ưu hóa Folia**: Toàn bộ tác vụ gameplay được xử lý qua scheduler chuyên biệt, vận hành mượt mà trên môi trường máy chủ phân vùng đa luồng mà không gây xung đột dữ liệu.
 
-## Installation
+---
 
-1. Download or build the SealCore jar.
-2. Put the jar in the server's `plugins/` directory.
-3. Install and configure ExcellentEconomy when using economy features.
-4. Start the server once, then edit generated files under `plugins/SealCore/`.
-5. Use `/sealcore reload` after changing reloadable configuration.
+## Lộ trình Phát triển (Roadmap)
 
-Command names and aliases are registered during server startup. Restart the server after changing them.
+Kế hoạch xây dựng và hoàn thiện các module tính năng gameplay cho SealMC:
 
-## Configuration
+- [x] **economy** *(Đã hoàn thành)*: Hệ thống kinh tế hoàn chỉnh — `/sell` GUI thông minh, hệ số nhân cấp độ bán, `/shop` danh mục, lịch sử bán hàng, packet worth lore, chuyển tiền `/pay` & số dư `/balance` (hỗ trợ `10k`, `1.5m`, `2b`...).
+- [ ] **shards**: Khu vực AFK nhận thưởng tài nguyên theo thời gian; bộ công cụ và trang bị Amethyst custom với chỉ số và hiệu ứng đặc biệt.
+- [ ] **auction**: Hệ thống chợ đen / sàn đấu giá giữa người chơi, cho phép tự do niêm yết, đấu giá và trao đổi vật phẩm quý hiếm.
+- [ ] **bounty**: Hệ thống truy nã người chơi — đặt tiền thưởng săn đầu người, kích thích giao tranh và nhận thưởng khi tiêu diệt mục tiêu.
+- [ ] **combat**: Rơi shards khi hạ gục đối thủ; hệ thống Combat Log chống đăng xuất khi đang giao tranh (combat tag); tùy biến thông báo hạ gục (kill messages).
+- [ ] **duel**: Đấu trường PvP 1v1 tại map riêng biệt; hỗ trợ chế độ thách đấu cược đồ / mất đồ khi tử trận (high-stakes pvp).
+- [ ] **home**: Hệ thống quản lý điểm nhà cá nhân (`/sethome`, `/home`), cho phép cấu hình giới hạn số lượng home linh hoạt theo cấp bậc / rank.
+- [ ] **stats**: Thống kê chi tiết chỉ số sinh tồn của người chơi (kills, deaths, thời gian chơi, số quặng đã đào...); hệ thống bảng xếp hạng (Leaderboards) vinh danh top server.
+- [ ] **spawner**: Hệ thống lồng quái ảo (Virtual Spawner) — tích lũy và rơi thẳng vật phẩm/kinh nghiệm vào kho hoặc túi đồ, tối ưu hóa hiệu năng máy chủ khi không phải sinh thực thể quái vật.
+- [ ] **team**: Hệ thống tổ đội / bang hội — liên minh cùng đồng đội, chia sẻ tài nguyên và các quyền lợi nhóm.
+- [ ] **teleport**: Hệ thống dịch chuyển người chơi toàn diện (`/warp`, `/tpa`, `/tpahere`, `/tpaccept`, `/spawn`, `/back`...).
 
-| Path | Purpose |
-| --- | --- |
-| `plugins/SealCore/config.yml` | Language, storage, hooks, and module toggles. |
-| `plugins/SealCore/languages/en.yml` | English fallback messages. |
-| `plugins/SealCore/languages/vi.yml` | Vietnamese messages. |
-| `plugins/SealCore/modules/economy/config.yml` | Economy command names, permissions, limits, and cooldown. |
-| `plugins/SealCore/modules/economy/prices.yml` | Per-item sell prices, including potion and enchanted-book keys. |
-| `plugins/SealCore/modules/economy/gui/sell-gui.yml` | `/sell` title, rows, input slots, and category buttons. |
-| `plugins/SealCore/modules/economy/gui/sell-multiplier.yml` | Category sell progression GUI, page slots, navigation, state panes, and shared progress bar. |
+---
 
-Missing default keys are merged into existing files without replacing user values. Keep module files inside their module directory when adding module-specific configuration.
+## Danh Sách Lệnh Người Chơi
 
-### `/sell` GUI
+| Lệnh | Mô tả | Quyền hạn mặc định |
+| --- | --- | --- |
+| `/sell` | Mở giao diện bán đồ tự động | `sealcore.economy.sell` |
+| `/sell history` | Xem lại lịch sử các lần bán hàng gần nhất | `sealcore.economy.sell` |
+| `/shop` | Mở cửa hàng mua sắm vật phẩm của máy chủ | `sealcore.economy.shop` |
+| `/balance`, `/bal` | Kiểm tra số dư tài khoản của bản thân | `sealcore.economy.balance` |
+| `/balance <player>` | Xem số dư của người chơi khác | `sealcore.economy.balance.others` |
+| `/pay <player> <số_tiền>` | Chuyển tiền cho người chơi khác (hỗ trợ `10k`, `1.5m`...) | `sealcore.economy.pay` |
+| `/worth` | Tra cứu giá bán của vật phẩm đang cầm | `sealcore.economy.worth` |
+| `/sealcore reload` | Tải lại cấu hình và ngôn ngữ của plugin (Admin) | `sealcore.admin` |
 
-`modules/economy/gui/sell-gui.yml` controls inventory size and which slots accept items. Items placed in configured input slots are priced using `modules/economy/prices.yml` when the GUI closes. Items without a price return to the player. The title can use `{TOTAL}`, `{TOTAL_FORMATTED}`, `{MONEY}`, and `{MONEY_FORMATTED}` placeholders. Category progression details are configured in `modules/economy/gui/sell-multiplier.yml`.
+---
 
-### Permissions
+## Cài Đặt & Cấu Hình
 
-- `sealcore.economy.balance` — view own balance.
-- `sealcore.economy.balance.others` — view another player's balance.
-- `sealcore.economy.pay` — use `/pay`.
-- `sealcore.economy.pay.bypass` — bypass `/pay` cooldown and limits.
-- `sealcore.economy.sell` — use `/sell`.
-- `sealcore.admin` — administrator permissions.
+### Yêu cầu hệ thống
+- Máy chủ Minecraft chạy **Paper** hoặc **Folia** (phiên bản 1.21.x trở lên).
+- Môi trường chạy **Java 21** trở lên.
+- Các plugin liên kết (khuyên dùng):
+  - **ExcellentEconomy**: Bắt buộc để quản lý các nguồn tiền tệ của module kinh tế.
+  - **PacketEvents**: Bắt buộc để kích hoạt tính năng Packet Worth Lore mà không chỉnh sửa NBT của item.
+  - **PlaceholderAPI**: Để sử dụng placeholder trong tin nhắn và giao diện.
 
-## Building
-
-Use the Gradle wrapper from project root:
-
-```bash
-GRADLE_USER_HOME="$PWD/.gradle" ./gradlew build
-```
-
-Run unit tests only:
-
-```bash
-GRADLE_USER_HOME="$PWD/.gradle" ./gradlew test
-```
-
-Run local Paper or Folia smoke tests:
-
-```bash
-GRADLE_USER_HOME="$PWD/.gradle" ./gradlew runServer
-```
-
-```bash
-GRADLE_USER_HOME="$PWD/.gradle" ./gradlew runFolia
-```
-
-Use `-PtestPlugins=/path/to/plugins` with a run task to load local ExcellentEconomy, Nightcore, PlaceholderAPI, or PacketEvents jars.
-
-## Development
-
-- Java sources live under `src/main/java/sealmc/swe3tie/sealcore`.
-- Bundled defaults live under `src/main/resources`.
-- Keep server-facing logic on `SealScheduler` so the same jar works on Paper and Folia.
-- Keep pure logic free of server calls so it remains unit-testable.
-- Run `./gradlew test` before submitting changes.
-
-## License
-
-No license has been declared in this repository yet.
+### Cài đặt nhanh
+1. Tải bản build `SealCore.jar` và đặt vào thư mục `plugins/` của máy chủ.
+2. Cài đặt các plugin phụ trợ cần thiết (`ExcellentEconomy`, `PacketEvents`).
+3. Khởi động máy chủ để SealCore tự động khởi tạo thư mục và các tệp cấu hình mặc định tại `plugins/SealCore/`.
+4. Điều chỉnh giá bán và tùy biến giao diện trong thư mục `plugins/SealCore/modules/economy/`.
+5. Sử dụng lệnh `/sealcore reload` để áp dụng các thay đổi cấu hình mà không cần khởi động lại máy chủ (ngoại trừ các thiết lập kết nối cơ sở dữ liệu và tên lệnh).
