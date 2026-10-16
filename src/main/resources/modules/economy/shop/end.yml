@@ -1,0 +1,58 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / Shop: end                                  │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+
+config-version: 1
+
+section:
+  slot: 12
+  material: END_STONE
+  name: '<#FFFFF6>ᴇɴᴅ'
+  lore:
+    - '<white>Nhấp để mở cửa hàng {SECTION}'
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ {SECTION}'
+rows: 3
+currency: money
+
+lore:
+  - '{CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+items:
+  ender_chest:
+    slot: 10
+    material: ENDER_CHEST
+    price: 2500
+  ender_pearl:
+    slot: 11
+    material: ENDER_PEARL
+    price: 100
+  end_stone:
+    slot: 12
+    material: END_STONE
+    price: 16
+  dragon_breath:
+    slot: 13
+    material: DRAGON_BREATH
+    price: 2000
+  end_rod:
+    slot: 14
+    material: END_ROD
+    price: 500
+  chorus_fruit:
+    slot: 15
+    material: CHORUS_FRUIT
+    price: 100
+  popped_chorus_fruit:
+    slot: 16
+    material: POPPED_CHORUS_FRUIT
+    price: 75
+  shulker_shell:
+    slot: 17
+    material: SHULKER_SHELL
+    price: 800
+  shulker_box:
+    slot: 18
+    material: SHULKER_BOX
+    price: 2000

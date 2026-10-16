@@ -108,3 +108,15 @@ economy:
     sold:
       chat: '<green>+${MONEY_FORMATTED}</green>'
       actionbar: '<green>+${MONEY_FORMATTED}</green>'
+
+  # Worth GUI command (/worth).
+  worth:
+    title: 'ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ — {PAGE}/{MAX_PAGE}'
+
+  # Shop GUI command (/shop).
+  shop:
+    purchased: '<white>You purchased <green>{AMOUNT}x {ITEM}</green> for {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}!'
+    not-enough: '<red>You do not have enough funds for this purchase.'
+    inventory-full: '<red>Your inventory does not have enough free space.'
+    spawner-unavailable: '<yellow>Spawner purchasing will be available soon!'
+

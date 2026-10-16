@@ -81,4 +81,18 @@ class SellProgressTest {
         assertEquals(25_000D, SellProgress.nextTarget(0D));
         assertEquals(0D, SellProgress.remaining(Double.MAX_VALUE));
     }
+
+    @Test
+    void supportsCustomBarConfig() {
+        var barConfig = new SellProgress.BarConfig(10, "[+]", "[-]");
+        var placeholders = SellProgress.placeholders(SellCategory.CROPS, 25_000D, "Cây", barConfig);
+        assertEquals("[+][+][+][+][+][-][-][-][-][-]", placeholders.get("PROGRESS_BAR"));
+
+        var maxed = SellProgress.placeholders(SellCategory.CROPS, Double.MAX_VALUE, "Cây", barConfig);
+        assertEquals("[+][+][+][+][+][+][+][+][+][+]", maxed.get("PROGRESS_BAR"));
+
+        var milestone = SellProgress.thresholdPlaceholders(SellCategory.CROPS, 0D,
+            SellProgress.thresholds().getFirst(), "Cây", barConfig);
+        assertEquals("[-][-][-][-][-][-][-][-][-][-]", milestone.get("PROGRESS_BAR"));
+    }
 }

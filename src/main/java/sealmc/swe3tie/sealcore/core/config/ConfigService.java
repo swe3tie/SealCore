@@ -41,6 +41,11 @@ public final class ConfigService {
         return current;
     }
 
+    @NotNull
+    public YamlFile mainFile() {
+        return this.mainFile;
+    }
+
     /**
      * File handle for a module config. Directory-based configs are preferred, while the legacy
      * {@code modules/<id>.yml} layout remains supported for modules that have not migrated yet.

@@ -58,6 +58,11 @@ hooks:
       money: money
       shards: shards
       coins: coins
+      common_key: common_key
+      gold_key: gold_key
+      prime_key: prime_key
+      crimson_key: crimson_key
+      amethyst_key: amethyst_key
     # Loại tiền tệ mặc định khi lệnh/tính năng không chỉ định loại tiền.
     default-currency: money
   # Tích hợp phân giải placeholder PlaceholderAPI (%...%).

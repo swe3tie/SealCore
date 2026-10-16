@@ -8,25 +8,47 @@
 
 config-version: 2
 
+# Cấu hình giao diện /sell multiplier
+menu:
+  title: '<dark_gray>ʜệ ѕố ʙáɴ'
+  rows: 3
+
 title: '<dark_gray>ᴛɪếɴ độ {SECTION} — {CURRENT_PAGE}/{MAX_PAGE}'
 rows: 6
-slots: [11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 10]
-page-slots:
-  1: [11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 18]
-  2: [10, 11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17]
-summary-slot: 50
-previous-slot: 46
-next-slot: 54
+
+progress-slots:
+  page-1: [11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17, 18]
+  page-2: [10, 11, 20, 29, 38, 39, 40, 31, 22, 13, 14, 15, 24, 33, 42, 43, 44, 35, 26, 17]
+
+# Cấu hình thanh tiến trình {PROGRESS_BAR} dùng chung cho cả giao diện /sell và giao diện tiến độ.
+progress-bar:
+  length: 16
+  complete: '<#9CC0D9>■'
+  incomplete: '<dark_gray>■'
+
 previous:
+  slot: 46
   material: ARROW
   name: '<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ'
   lore:
     - '<white>Nhấp để quay về trang trước'
+
 next:
+  slot: 54
   material: ARROW
   name: '<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ'
   lore:
     - '<white>Nhấp để sang trang sau'
+
+summary:
+  slot: 50
+  name: '<#9CC0D9>{SECTION}'
+  lore:
+    - '<white>ʜệ ѕố ᴛɪếᴘ ᴛʜᴇᴏ: <#9CC0D9>{NEXT_MULTIPLIER}x'
+    - '<white>{PROGRESS_BAR} <#9CC0D9>{PERCENTAGE}%'
+    - '<dark_gray>{CURRENT_FORMATTED}/{NEXT_TARGET_FORMATTED}'
+    - '<gray>Bán ᴠậᴛ ᴘʜẩᴍ để nâng cấp hệ số bán của bạn'
+
 panes:
   in-progress:
     material: YELLOW_STAINED_GLASS_PANE

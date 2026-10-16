@@ -1,0 +1,93 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / Shop: shards                                │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+
+config-version: 1
+
+section:
+  slot: 16
+  material: AMETHYST_SHARD
+  name: '<dark_purple>ѕʜᴀʀᴅѕ'
+  lore:
+    - '<white>Nhấp để mở cửa hàng {SECTION}'
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ {SECTION}'
+rows: 3
+currency: shards
+
+lore:
+  - '{CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+items:
+  common_key:
+    slot: 3
+    material: TRIPWIRE_HOOK
+    name: '<green>ᴋᴇʏ ᴛʜườɴɢ'
+    reward-currency: common_key
+    price: 200
+  gold_key:
+    slot: 4
+    material: TRIAL_KEY
+    name: '<yellow>ᴋᴇʏ ʜᴏàɴɢ ᴋɪᴍ'
+    reward-currency: gold_key
+    price: 800000
+  prime_key:
+    slot: 5
+    material: TRIAL_KEY
+    name: '<aqua>ᴋᴇʏ ᴛốɪ ᴄᴀᴏ'
+    reward-currency: prime_key
+    price: 1200
+  crimson_key:
+    slot: 6
+    material: OMINOUS_TRIAL_KEY
+    name: '<red>ᴋᴇʏ đẫᴍ ᴍáᴜ'
+    reward-currency: crimson_key
+    price: 1600
+  amethyst_key:
+    slot: 7
+    material: OMINOUS_TRIAL_KEY
+    name: '<dark_purple>ᴋᴇʏ ᴛʜạᴄʜ ᴀɴʜ ᴛíᴍ'
+    reward-currency: amethyst_key
+    price: 2000
+
+  pig_spawner:
+    slot: 11
+    material: PLAYER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ʜᴇᴏ'
+    base64: 'e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZWVlYjg4MjFjODJkNjg4MWMyOWQ3ZGFlMWMyMzg3Njg4ODljYzgzYzZkNTgxY2FhMDk5MDIyNDExZGZmMjQzYSJ9fX0='
+    spawner: true
+  cow_spawner:
+    slot: 12
+    material: PLAYER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ʙò'
+    base64: 'e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMTAxMmQzZDk0NWI0OGI3MDM5ZDBhOWRmYzQzNDRjNWE1NmMzMDdiYjAwZTVlNTA5NTZlMjY2YjA0ZDlmYzlkMCJ9fX0='
+    spawner: true
+  skeleton_spawner:
+    slot: 13
+    material: SKELETON_SKULL
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ʙộ хươɴɢ'
+    spawner: true
+  creeper_spawner:
+    slot: 14
+    material: CREEPER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ᴄʀᴇᴇᴘᴇʀ'
+    spawner: true
+  blaze_spawner:
+    slot: 15
+    material: PLAYER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ǫᴜỷ ʟửᴀ'
+    base64: 'e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZGM4YjVjNzg4OGJlNTA4YzhkYjQ2NTZhOGRiMzgxNzQ5MWFmZjgwMThlMjgzMWE2ZGJhNjgzZDRhNTc5ZWM2YSJ9fX0='
+    spawner: true
+  witch_spawner:
+    slot: 16
+    material: PLAYER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ᴘʜù ᴛʜủʏ'
+    base64: 'eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvMjBlMTNkMTg0NzRmYzk0ZWQ1NWFlYjcwNjk1NjZlNDY4N2Q3NzNkYWMxNmY0YzNmODcyMmZjOTViZjlmMmRmYSJ9fX0='
+    spawner: true
+  iron_golem_spawner:
+    slot: 17
+    material: PLAYER_HEAD
+    name: '<yellow>ʟồɴɢ ѕɪɴʜ ѕảɴ ɴɢườɪ ѕắᴛ'
+    base64: 'e3RleHR1cmVzOntTS0lOOnt1cmw6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvZThmMjQ5NjQ1ZmIyMWI3MDQzYmQ1YmI4YzAzMjY0MDJkOWYxODU5MGMzZjE1ZjBlNWY5N2MzMDk3YzhmYzZjZCJ9fX0='
+    spawner: true

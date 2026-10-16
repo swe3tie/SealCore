@@ -1,0 +1,38 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / GUI: sell-history                          │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+# Placeholders: {SELL_DATE}, {AMOUNT}, {TOTAL_PRICE_FORMATTED}, {CURRENCY_PREFIX}, {CURRENCY_SUFFIX}.
+
+config-version: 1
+
+title: '<dark_gray>ʟịᴄʜ ѕử ʙáɴ — {PAGE}/{MAX_PAGE}'
+rows: 6
+
+item-lore:
+  - '<white>Thời gian: <#9CC0D9>{SELL_DATE}</#9CC0D9>'
+  - '<white>Số lượng: <#9CC0D9>{AMOUNT}</#9CC0D9>'
+  - '<white>Tổng: <green>${TOTAL_PRICE_FORMATTED}</green>'
+
+toolbar:
+  previous:
+    material: ARROW
+    name: '<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ'
+    lore:
+      - '<white>Nhấp để quay về trang trước'
+  next:
+    material: ARROW
+    name: '<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ'
+    lore:
+      - '<white>Nhấp để sang trang sau'
+  sort:
+    material: CAULDRON
+    name: '<#9CC0D9>ѕắᴘ хếᴘ'
+  refresh:
+    material: ANVIL
+    name: '<#9CC0D9>ʟịᴄʜ ѕử ʙáɴ'
+    lore:
+      - '<white>Nhấp để làm mới'
+  filter:
+    material: HOPPER
+    name: '<#9CC0D9>ʟọᴄ'

@@ -37,5 +37,50 @@ commands:
   # Lệnh bán vật phẩm qua giao diện GUI (/sell).
   sell:
     name: sell
-    aliases: []
+    aliases:
+      - sel
     permission: sealcore.economy.sell
+
+  # Lệnh tra cứu giá trị vật phẩm (/worth).
+  worth:
+    name: worth
+    aliases: []
+    permission: sealcore.economy.worth
+
+  # Lệnh mở cửa hàng mua vật phẩm (/shop).
+  # Cấu hình danh mục, vật phẩm, giá bán và slot icon nằm trong thư mục shop/ (end.yml, nether.yml, gear.yml, food.yml, shards.yml).
+  shop:
+    name: shop
+    aliases: []
+    permission: sealcore.economy.shop
+
+# Cấu hình hiển thị giá trị vật phẩm qua lore (client-side qua PacketEvents).
+# Hiển thị khi người chơi di chuột vào vật phẩm bất kỳ trong túi đồ hoặc thùng chứa.
+worth-lore:
+  # Bật/tắt hiển thị lore giá trị.
+  enabled: true
+  # Các dòng lore hiển thị trên vật phẩm. Hỗ trợ MiniMessage và các placeholder:
+  # {CURRENCY_PREFIX}, {PRICE_FORMATTED}, {CURRENCY_SUFFIX}, {WORTH}, {WORTH_FORMATTED}
+  lines:
+    - '<gray>Giá trị: {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+# Cấu hình phân trang chung cho các giao diện (/worth, /sell tiến độ).
+pagination:
+  # Bật/tắt phân trang (true: cho phép sang trang, false: cố định ở trang 1).
+  enabled: true
+  # Bật/tắt riêng cho từng giao diện (nếu không đặt sẽ lấy theo enabled ở trên):
+  worth: true
+  sell-multiplier: true
+  # (Tùy chọn) Nút quay lại trang trước và chuyển sang trang sau:
+  previous:
+    material: ARROW
+    name: '<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ'
+    lore:
+      - '<white>Nhấp để quay về trang trước'
+  next:
+    material: ARROW
+    name: '<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ'
+    lore:
+      - '<white>Nhấp để sang trang sau'
+
+

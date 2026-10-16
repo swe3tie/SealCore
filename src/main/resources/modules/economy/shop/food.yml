@@ -1,0 +1,58 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / Shop: food                                  │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+
+config-version: 1
+
+section:
+  slot: 15
+  material: COOKED_BEEF
+  name: '<gold>ꜰᴏᴏᴅ'
+  lore:
+    - '<white>Nhấp để mở cửa hàng {SECTION}'
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ {SECTION}'
+rows: 3
+currency: money
+
+lore:
+  - '{CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+items:
+  potato:
+    slot: 10
+    material: POTATO
+    price: 60
+  sweet_berries:
+    slot: 11
+    material: SWEET_BERRIES
+    price: 75
+  melon_slice:
+    slot: 12
+    material: MELON_SLICE
+    price: 35
+  carrot:
+    slot: 13
+    material: CARROT
+    price: 85
+  apple:
+    slot: 14
+    material: APPLE
+    price: 50
+  cooked_chicken:
+    slot: 15
+    material: COOKED_CHICKEN
+    price: 60
+  steak:
+    slot: 16
+    material: COOKED_BEEF
+    price: 100
+  golden_carrot:
+    slot: 17
+    material: GOLDEN_CARROT
+    price: 120
+  golden_apple:
+    slot: 18
+    material: GOLDEN_APPLE
+    price: 500

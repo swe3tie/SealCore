@@ -1,5 +1,6 @@
 package sealmc.swe3tie.sealcore.modules.economy;
 
+import com.mojang.brigadier.arguments.StringArgumentType;
 import com.mojang.brigadier.builder.LiteralArgumentBuilder;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
 import io.papermc.paper.command.brigadier.Commands;
@@ -7,6 +8,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.tag.resolver.Placeholder;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,14 +21,18 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.core.hook.Hook;
 import sealmc.swe3tie.sealcore.core.hook.economy.CurrencyService;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellGuiConfig;
+import sealmc.swe3tie.sealcore.modules.economy.gui.SellHistoryGui;
 import sealmc.swe3tie.sealcore.modules.economy.gui.SellInventoryHolder;
+import sealmc.swe3tie.sealcore.modules.economy.util.ContainerHelper;
 import sealmc.swe3tie.sealcore.modules.economy.util.MoneyFormat;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -37,6 +43,7 @@ public final class SellCommand implements Listener {
 
     private final EconomyModule module;
     private volatile ProgressStore progressStore;
+    private volatile SellHistoryStore sellHistoryStore;
 
     public SellCommand(@NotNull EconomyModule module) {
         this.module = module;
@@ -46,21 +53,46 @@ public final class SellCommand implements Listener {
         this.progressStore = progressStore;
     }
 
+    public void setSellHistoryStore(@NotNull SellHistoryStore sellHistoryStore) {
+        this.sellHistoryStore = sellHistoryStore;
+    }
+
     public void register() {
         var section = this.module.config().getConfigurationSection("commands.sell");
         String name = section != null ? section.getString("name", "sell") : "sell";
         List<String> aliases = section != null ? section.getStringList("aliases") : List.of();
         String permission = section != null ? section.getString("permission", "sealcore.economy.sell") : "sealcore.economy.sell";
+
         LiteralArgumentBuilder<CommandSourceStack> root = Commands.literal(name)
-            .executes(ctx -> this.openGui(ctx.getSource().getSender()));
+            .executes(ctx -> this.openGui(ctx.getSource().getSender()))
+            .then(Commands.literal("multiplier")
+                .executes(ctx -> this.openMultiplier(ctx.getSource().getSender())))
+            .then(Commands.literal("history")
+                .executes(ctx -> this.openHistory(ctx.getSource().getSender())))
+            .then(Commands.argument("subcommand_alias", StringArgumentType.word())
+                .suggests((ctx, builder) -> builder.buildFuture())
+                .executes(ctx -> {
+                    String sub = ctx.getArgument("subcommand_alias", String.class);
+                    if ("multi".equalsIgnoreCase(sub) || "multiplier".equalsIgnoreCase(sub)) {
+                        return this.openMultiplier(ctx.getSource().getSender());
+                    }
+                    if ("history".equalsIgnoreCase(sub)) {
+                        return this.openHistory(ctx.getSource().getSender());
+                    }
+                    return 0;
+                }));
+
         this.module.core().commands().register(this.module::isActive, root, "Open sell menu", aliases, permission);
     }
 
     public void closeAll() {
         for (Player player : Bukkit.getOnlinePlayers()) {
             InventoryView view = player.getOpenInventory();
-            if (view.getTopInventory().getHolder() instanceof SellInventoryHolder holder) {
+            Inventory top = view.getTopInventory();
+            if (top.getHolder() instanceof SellInventoryHolder holder) {
                 if (holder.isProgressGui()) holder.suppressClose();
+                player.closeInventory();
+            } else if (top.getHolder() instanceof SellHistoryGui.Holder) {
                 player.closeInventory();
             }
         }
@@ -77,6 +109,54 @@ public final class SellCommand implements Listener {
         }
         this.openSellGui(player);
         return 1;
+    }
+
+    private int openMultiplier(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            this.module.core().lang().send(sender, "core.players-only");
+            return 0;
+        }
+        this.openMultiplierGui(player);
+        return 1;
+    }
+
+    private int openHistory(CommandSender sender) {
+        if (!(sender instanceof Player player)) {
+            this.module.core().lang().send(sender, "core.players-only");
+            return 0;
+        }
+        SellHistoryGui.open(player, this.module);
+        return 1;
+    }
+
+    private void openMultiplierGui(@NotNull Player player) {
+        SellGuiConfig gui = this.module.guiConfig();
+        SellInventoryHolder holder = SellInventoryHolder.createMultiplier(player);
+        Inventory inventory = Bukkit.createInventory(holder, gui.multiplierSize(),
+            this.module.core().lang().parse(gui.multiplierTitle(), player));
+        holder.setInventory(inventory);
+        this.placeMultiplierCategoryButtons(player, inventory, gui, Map.of());
+        player.openInventory(inventory);
+        ProgressStore store = this.progressStore;
+        if (store != null) {
+            store.load(player.getUniqueId()).whenComplete((progress, error) -> this.module.core().scheduler().entity(player, () -> {
+                if (error != null || player.getOpenInventory().getTopInventory() != inventory) return;
+                this.placeMultiplierCategoryButtons(player, inventory, gui, progress);
+            }));
+        }
+    }
+
+    private void placeMultiplierCategoryButtons(@NotNull Player player, @NotNull Inventory inventory,
+                                                @NotNull SellGuiConfig gui,
+                                                @NotNull Map<SellCategory, Double> progress) {
+        SellProgress.BarConfig barConfig = gui.progressBar();
+        for (SellCategory category : SellCategory.values()) {
+            double paid = progress.getOrDefault(category, 0D);
+            SellGuiConfig.CategoryButton button = gui.categoryButton(category);
+            int slot = 9 + category.ordinal();
+            inventory.setItem(slot, button.item().createItem(player, this.module.core().lang(),
+                SellProgress.placeholders(category, paid, button.item().name(), barConfig)));
+        }
     }
 
     private void openSellGui(@NotNull Player player) {
@@ -99,11 +179,12 @@ public final class SellCommand implements Listener {
 
     private void placeCategoryButtons(@NotNull Player player, @NotNull Inventory inventory, @NotNull SellGuiConfig gui,
                                       @NotNull Map<SellCategory, Double> progress) {
+        SellProgress.BarConfig barConfig = gui.progressBar();
         for (SellCategory category : SellCategory.values()) {
             double paid = progress.getOrDefault(category, 0D);
             SellGuiConfig.CategoryButton button = gui.categoryButton(category);
             inventory.setItem(button.slot(), button.item().createItem(player, this.module.core().lang(),
-                SellProgress.placeholders(category, paid, button.item().name())));
+                SellProgress.placeholders(category, paid, button.item().name(), barConfig)));
         }
     }
 
@@ -133,6 +214,12 @@ public final class SellCommand implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onInventoryClick(InventoryClickEvent event) {
+        if (event.getView().getTopInventory().getHolder() instanceof SellHistoryGui.Holder) {
+            if (event.getWhoClicked() instanceof Player player) {
+                SellHistoryGui.handleClick(event, player);
+            }
+            return;
+        }
         if (!(event.getView().getTopInventory().getHolder() instanceof SellInventoryHolder holder)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
 
@@ -140,6 +227,19 @@ public final class SellCommand implements Listener {
         if (holder.isProgressGui()) {
             event.setCancelled(true);
             if (this.isTop(event.getView(), rawSlot)) this.handleProgressClick(player, holder, rawSlot);
+            return;
+        }
+
+        if (holder.isMultiplierGui()) {
+            event.setCancelled(true);
+            if (!this.isTop(event.getView(), rawSlot)) return;
+            if (rawSlot >= 9 && rawSlot <= 17) {
+                int ord = rawSlot - 9;
+                if (ord >= 0 && ord < SellCategory.values().length) {
+                    SellCategory clicked = SellCategory.values()[ord];
+                    this.openProgressGui(player, holder, clicked, 1);
+                }
+            }
             return;
         }
 
@@ -169,9 +269,13 @@ public final class SellCommand implements Listener {
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = false)
     public void onInventoryDrag(InventoryDragEvent event) {
+        if (event.getView().getTopInventory().getHolder() instanceof SellHistoryGui.Holder) {
+            event.setCancelled(true);
+            return;
+        }
         if (!(event.getView().getTopInventory().getHolder() instanceof SellInventoryHolder holder)) return;
         if (!(event.getWhoClicked() instanceof Player player)) return;
-        if (holder.isProgressGui()) {
+        if (holder.isProgressGui() || holder.isMultiplierGui()) {
             event.setCancelled(true);
             return;
         }
@@ -199,7 +303,7 @@ public final class SellCommand implements Listener {
             SellGuiConfig.ProgressConfig config = this.module.guiConfig().progress();
             int maxPage = config.pageCount();
             int safePage = Math.max(1, Math.min(page, maxPage));
-            SellInventoryHolder holder = new SellInventoryHolder(player, category, safePage);
+            SellInventoryHolder holder = new SellInventoryHolder(player, category, safePage, previous.kind());
             Inventory inventory = Bukkit.createInventory(holder, config.size(), this.buildProgressTitle(player, category, safePage, maxPage));
             holder.setInventory(inventory);
             this.populateProgress(player, inventory, category, safePage, maxPage, values.getOrDefault(category, 0D));
@@ -226,9 +330,15 @@ public final class SellCommand implements Listener {
     private void populateProgress(@NotNull Player player, @NotNull Inventory inventory, @NotNull SellCategory category,
                                   int page, int maxPage, double paid) {
         SellGuiConfig.ProgressConfig config = this.module.guiConfig().progress();
+        SellProgress.BarConfig barConfig = this.module.guiConfig().progressBar();
         SellGuiConfig.CategoryButton summary = this.module.guiConfig().categoryButton(category);
-        inventory.setItem(config.summarySlot(), summary.item().createItem(player, this.module.core().lang(),
-            SellProgress.placeholders(category, paid, summary.item().name())));
+        SellGuiConfig.ItemDefinition summaryCfg = config.summary();
+        Material summaryMat = summaryCfg.material() != Material.AIR ? summaryCfg.material() : summary.item().material();
+        String summaryName = !summaryCfg.name().isBlank() ? summaryCfg.name() : summary.item().name();
+        List<String> summaryLore = !summaryCfg.lore().isEmpty() ? summaryCfg.lore() : summary.item().lore();
+        SellGuiConfig.ItemDefinition effectiveSummary = new SellGuiConfig.ItemDefinition("summary", summaryMat, summaryName, summaryLore);
+        inventory.setItem(config.summarySlot(), effectiveSummary.createItem(player, this.module.core().lang(),
+            SellProgress.placeholders(category, paid, summary.item().name(), barConfig)));
 
         for (int slot : config.allProgressSlots()) {
             inventory.setItem(slot, null);
@@ -244,18 +354,19 @@ public final class SellCommand implements Listener {
             SellGuiConfig.ItemDefinition definition = paid >= threshold.required()
                 ? config.completed().item() : (SellProgress.next(paid) == threshold ? config.inProgress().item() : config.incomplete().item());
             Map<String, String> placeholders = SellProgress.thresholdPlaceholders(category, paid, threshold,
-                "<green>■", "<dark_gray>■", summary.item().name());
+                summary.item().name(), barConfig);
             inventory.setItem(pageSlots.get(i), definition.createItem(player, this.module.core().lang(), placeholders));
         }
-        inventory.setItem(config.previousSlot(), page > 1 ? config.previous().createItem(player, this.module.core().lang()) : null);
-        inventory.setItem(config.nextSlot(), page < maxPage ? config.next().createItem(player, this.module.core().lang()) : null);
+        boolean pagination = config.paginationEnabled();
+        inventory.setItem(config.previousSlot(), (pagination && page > 1) ? config.previous().createItem(player, this.module.core().lang()) : null);
+        inventory.setItem(config.nextSlot(), (pagination && page < maxPage) ? config.next().createItem(player, this.module.core().lang()) : null);
     }
 
     private void handleProgressClick(@NotNull Player player, @NotNull SellInventoryHolder holder, int rawSlot) {
         SellGuiConfig.ProgressConfig config = this.module.guiConfig().progress();
-        if (rawSlot == config.previousSlot() && holder.page() > 1) {
+        if (config.paginationEnabled() && rawSlot == config.previousSlot() && holder.page() > 1) {
             this.changeProgressPage(player, holder, holder.page() - 1);
-        } else if (rawSlot == config.nextSlot() && holder.page() < config.pageCount()) {
+        } else if (config.paginationEnabled() && rawSlot == config.nextSlot() && holder.page() < config.pageCount()) {
             this.changeProgressPage(player, holder, holder.page() + 1);
         }
     }
@@ -266,24 +377,91 @@ public final class SellCommand implements Listener {
         Player player = holder.player();
         if (holder.consumeSuppressedClose()) return;
         if (holder.isProgressGui()) {
-            this.module.core().scheduler().entityLater(player, () -> this.openSellGui(player), null, 1L);
+            if (holder.parentKind() == SellInventoryHolder.Kind.MULTIPLIER) {
+                this.module.core().scheduler().entityLater(player, () -> this.openMultiplierGui(player), null, 1L);
+            } else {
+                this.module.core().scheduler().entityLater(player, () -> this.openSellGui(player), null, 1L);
+            }
+            return;
+        }
+        if (holder.isMultiplierGui()) {
             return;
         }
         this.sellItems(player, holder);
     }
 
+    private record PendingSoldItem(
+        @NotNull Material material,
+        @Nullable String customName,
+        @Nullable String potionType,
+        @NotNull SellCategory category,
+        int amount,
+        double basePrice
+    ) {
+        PendingSoldItem merge(int addAmount, double addPrice) {
+            return new PendingSoldItem(this.material, this.customName, this.potionType, this.category, this.amount + addAmount, this.basePrice + addPrice);
+        }
+    }
+
+    private static void recordPending(@NotNull Map<String, PendingSoldItem> map,
+                                      @NotNull Material mat, @Nullable String name, @Nullable String potionType,
+                                      @NotNull SellCategory cat, int amount, double price) {
+        String key = cat.id() + ":" + mat.name() + ":" + (potionType != null ? potionType : "") + ":" + (name != null ? name : "");
+        map.compute(key, (k, existing) -> existing == null
+            ? new PendingSoldItem(mat, name, potionType, cat, amount, price)
+            : existing.merge(amount, price));
+    }
+
     private void sellItems(@NotNull Player player, @NotNull SellInventoryHolder holder) {
         Inventory inventory = holder.getInventory();
         EnumMap<SellCategory, Double> baseTotals = new EnumMap<>(SellCategory.class);
+        Map<String, PendingSoldItem> soldMap = new LinkedHashMap<>();
         List<ItemStack> unsellable = new ArrayList<>();
         for (int slot : holder.sellSlots()) {
             ItemStack stack = inventory.getItem(slot);
             if (stack == null || stack.isEmpty() || stack.getType().isAir()) continue;
             inventory.setItem(slot, null);
+
+            if (ContainerHelper.isShulkerBox(stack)) {
+                List<ItemStack> inner = ContainerHelper.getShulkerItems(stack);
+                if (!inner.isEmpty()) {
+                    ContainerHelper.ContainerResult result = ContainerHelper.processContainerContents(inner, this.module.priceService());
+                    result.totals().forEach((cat, amt) -> baseTotals.merge(cat, amt, Double::sum));
+                    for (ContainerHelper.SoldContainerItem sold : result.soldItems()) {
+                        recordPending(soldMap, sold.material(), sold.customName(), sold.potionType(), sold.category(), sold.amount(), sold.basePrice());
+                    }
+                    ItemStack returnShulker = stack.clone();
+                    ContainerHelper.setShulkerItems(returnShulker, result.remainingUnsellable());
+                    unsellable.add(returnShulker);
+                    continue;
+                }
+            } else if (ContainerHelper.isBundle(stack)) {
+                List<ItemStack> inner = ContainerHelper.getBundleItems(stack);
+                if (!inner.isEmpty()) {
+                    ContainerHelper.ContainerResult result = ContainerHelper.processContainerContents(inner, this.module.priceService());
+                    result.totals().forEach((cat, amt) -> baseTotals.merge(cat, amt, Double::sum));
+                    for (ContainerHelper.SoldContainerItem sold : result.soldItems()) {
+                        recordPending(soldMap, sold.material(), sold.customName(), sold.potionType(), sold.category(), sold.amount(), sold.basePrice());
+                    }
+                    ItemStack returnBundle = stack.clone();
+                    ContainerHelper.setBundleItems(returnBundle, result.remainingUnsellable());
+                    unsellable.add(returnBundle);
+                    continue;
+                }
+            }
+
             double itemTotal = this.module.priceService().getItemPrice(stack);
             SellCategory category = this.module.priceService().category(stack);
-            if (itemTotal > 0D && category != null) baseTotals.merge(category, itemTotal, Double::sum);
-            else unsellable.add(stack);
+            if (itemTotal > 0D && category != null) {
+                baseTotals.merge(category, itemTotal, Double::sum);
+                String customName = stack.hasItemMeta() && stack.getItemMeta().hasDisplayName() && stack.getItemMeta().displayName() != null
+                    ? LegacyComponentSerializer.legacySection().serialize(stack.getItemMeta().displayName())
+                    : null;
+                String potionType = ContainerHelper.extractPotionType(stack);
+                recordPending(soldMap, stack.getType(), customName, potionType, category, stack.getAmount(), itemTotal);
+            } else {
+                unsellable.add(stack);
+            }
         }
         this.returnItems(player, unsellable);
         if (baseTotals.isEmpty() || this.module.currency() == null) return;
@@ -302,6 +480,26 @@ public final class SellCommand implements Listener {
             if (currency == null) return CompletableFuture.completedFuture(0D);
             return currency.deposit(playerId, "money", total, "sell").thenCompose(success -> {
                 if (!Boolean.TRUE.equals(success)) return CompletableFuture.completedFuture(0D);
+
+                SellHistoryStore historyStore = this.sellHistoryStore;
+                if (historyStore != null && !soldMap.isEmpty()) {
+                    long now = System.currentTimeMillis();
+                    List<SellHistoryStore.RecordItem> historyItems = new ArrayList<>(soldMap.size());
+                    for (PendingSoldItem item : soldMap.values()) {
+                        double mult = SellProgress.multiplier(progress.getOrDefault(item.category(), 0D));
+                        historyItems.add(new SellHistoryStore.RecordItem(
+                            item.material(),
+                            item.customName(),
+                            item.potionType(),
+                            item.category(),
+                            item.amount(),
+                            item.basePrice() * mult,
+                            now
+                        ));
+                    }
+                    historyStore.record(playerId, historyItems);
+                }
+
                 CompletableFuture<Void> chain = CompletableFuture.completedFuture(null);
                 for (Map.Entry<SellCategory, Double> entry : paidByCategory.entrySet()) {
                     chain = chain.thenCompose(ignored -> store.add(playerId, entry.getKey(), entry.getValue()).thenApply(values -> null));
@@ -336,8 +534,15 @@ public final class SellCommand implements Listener {
         String standard = MoneyFormat.formatStandard(total);
         String compact = MoneyFormat.formatCompact(total);
         return this.module.core().lang().parse(this.module.guiConfig().title(), player,
-            Placeholder.unparsed("total", standard), Placeholder.unparsed("total_formatted", compact),
-            Placeholder.unparsed("money", standard), Placeholder.unparsed("money_formatted", compact));
+            Placeholder.parsed("currency_prefix", "<green>$"),
+            Placeholder.unparsed("currency_suffix", ""),
+            Placeholder.unparsed("price_formatted", compact),
+            Placeholder.unparsed("price_compact", compact),
+            Placeholder.unparsed("price", standard),
+            Placeholder.unparsed("total", standard),
+            Placeholder.unparsed("total_formatted", compact),
+            Placeholder.unparsed("money", standard),
+            Placeholder.unparsed("money_formatted", compact));
     }
 
     private Component buildProgressTitle(@NotNull Player player, @NotNull SellCategory category, int page, int maxPage) {

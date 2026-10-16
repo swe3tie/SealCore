@@ -1,0 +1,39 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy - worth lookup GUI                           │
+# ╰──────────────────────────────────────────────────────────────╯
+# Giao diện tra cứu danh mục giá bán từ prices.yml (/worth).
+# Tiêu đề hỗ trợ: {PAGE}, {CURRENT_PAGE}, {MAX_PAGE}.
+# Dòng lore item hỗ trợ: {WORTH}, {WORTH_FORMATTED}, {SECTION_MULTIPLIER}, {MULTIPLIER}, {SECTION}.
+
+config-version: 1
+
+title: "ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ — {PAGE}/{MAX_PAGE}"
+rows: 6
+
+item-lore:
+  - "<white>Giá trị: {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}"
+  - "<white>Hệ số: <#9CC0D9>{SECTION_MULTIPLIER}x"
+  - "<white>Phân loại: <#9CC0D9>{SECTION}"
+
+toolbar:
+  previous:
+    material: ARROW
+    name: "<#9CC0D9>ᴛʀᴀɴɢ ᴛʀướᴄ"
+    lore:
+      - "<white>Nhấp để quay về trang trước"
+  next:
+    material: ARROW
+    name: "<#9CC0D9>ᴛʀᴀɴɢ ѕᴀᴜ"
+    lore:
+      - "<white>Nhấp để sang trang sau"
+  sort:
+    material: CAULDRON
+    name: "<#9CC0D9>ѕắᴘ хếᴘ"
+  refresh:
+    material: ANVIL
+    name: "<#9CC0D9>ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ"
+    lore:
+      - "<white>Nhấp để làm mới"
+  filter:
+    material: HOPPER
+    name: "<#9CC0D9>ʟọᴄ"

@@ -6,7 +6,7 @@ loader: sealmc.swe3tie.sealcore.SealCoreLoader
 api-version: '1.21.11'
 description: All-in-one economy SMP plugin for Paper and Folia.
 author: swe3tie
-website: https://github.com/swe3tie
+website: https://github.com/swe3tie/SealCore
 folia-supported: true
 load: POSTWORLD
 
@@ -14,15 +14,15 @@ dependencies:
   server:
     ExcellentEconomy:
       load: BEFORE
-      required: false
+      required: true
       join-classpath: true
     PlaceholderAPI:
       load: BEFORE
-      required: false
+      required: true
       join-classpath: true
     packetevents:
       load: BEFORE
-      required: false
+      required: true
       join-classpath: true
 
 permissions:

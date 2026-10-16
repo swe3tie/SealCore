@@ -1,0 +1,10 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / GUI: shop-main                             │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+# Các danh mục và vị trí slot hiển thị được nạp tự động từ thư mục modules/economy/shop/*.yml.
+
+config-version: 1
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ'
+rows: 3
