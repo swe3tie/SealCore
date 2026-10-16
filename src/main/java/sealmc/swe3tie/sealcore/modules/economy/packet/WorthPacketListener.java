@@ -290,6 +290,14 @@ public final class WorthPacketListener extends PacketListenerAbstract {
 
         for (String template : config.lines()) {
             String rendered = template
+                .replace("{CURRENCY_PREFIX}", "<green>$")
+                .replace("{CURRENCY_SUFFIX}", "")
+                .replace("{PRICE_FORMATTED}", compact)
+                .replace("{price_formatted}", compact)
+                .replace("{PRICE_COMPACT}", compact)
+                .replace("{price_compact}", compact)
+                .replace("{PRICE}", standard)
+                .replace("{price}", standard)
                 .replace("{WORTH_FORMATTED}", compact)
                 .replace("{worth_formatted}", compact)
                 .replace("{WORTH_COMPACT}", compact)

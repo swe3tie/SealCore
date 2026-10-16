@@ -1,0 +1,60 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / Shop: gear                                  │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+
+config-version: 1
+
+section:
+  slot: 14
+  material: TOTEM_OF_UNDYING
+  name: '<yellow>ɢᴇᴀʀѕ'
+  lore:
+    - '<white>Nhấp để mở cửa hàng {SECTION}'
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ {SECTION}'
+rows: 3
+currency: money
+
+lore:
+  - '{CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+items:
+  obsidian:
+    slot: 10
+    material: OBSIDIAN
+    price: 100
+  end_crystal:
+    slot: 11
+    material: END_CRYSTAL
+    price: 350
+  respawn_anchor:
+    slot: 12
+    material: RESPAWN_ANCHOR
+    price: 1000
+  glowstone:
+    slot: 13
+    material: GLOWSTONE
+    price: 100
+  totem:
+    slot: 14
+    material: TOTEM_OF_UNDYING
+    price: 1000
+  ender_pearl:
+    slot: 15
+    material: ENDER_PEARL
+    price: 100
+  golden_apple:
+    slot: 16
+    material: GOLDEN_APPLE
+    price: 500
+  exp_bottle:
+    slot: 17
+    material: EXPERIENCE_BOTTLE
+    price: 200
+  slow_falling_arrow:
+    slot: 18
+    material: TIPPED_ARROW
+    name: '<white>Mũi tên rơi chậm'
+    potion-type: SLOW_FALLING
+    price: 500

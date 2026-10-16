@@ -1,11 +1,13 @@
 package sealmc.swe3tie.sealcore.modules.economy.util;
 
+import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import org.bukkit.Material;
 import org.bukkit.block.ShulkerBox;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.PotionMeta;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import sealmc.swe3tie.sealcore.modules.economy.ItemPriceService;
@@ -14,6 +16,7 @@ import sealmc.swe3tie.sealcore.modules.economy.SellCategory;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /** Utilities for inspecting, extracting, and emptying Shulker Boxes and Bundles. */
@@ -144,6 +147,7 @@ public final class ContainerHelper {
                                                            @NotNull ItemPriceService priceService) {
         EnumMap<SellCategory, Double> totals = new EnumMap<>(SellCategory.class);
         List<ItemStack> remaining = new ArrayList<>();
+        List<SoldContainerItem> soldItems = new ArrayList<>();
 
         for (ItemStack item : items) {
             if (isEmptyOrAir(item)) continue;
@@ -153,6 +157,7 @@ public final class ContainerHelper {
                 if (!inner.isEmpty()) {
                     ContainerResult innerResult = processContainerContents(inner, priceService);
                     innerResult.totals().forEach((cat, amt) -> totals.merge(cat, amt, Double::sum));
+                    soldItems.addAll(innerResult.soldItems());
                     ItemStack returnShulker = item.clone();
                     setShulkerItems(returnShulker, innerResult.remainingUnsellable());
                     remaining.add(returnShulker);
@@ -163,6 +168,7 @@ public final class ContainerHelper {
                 if (!inner.isEmpty()) {
                     ContainerResult innerResult = processContainerContents(inner, priceService);
                     innerResult.totals().forEach((cat, amt) -> totals.merge(cat, amt, Double::sum));
+                    soldItems.addAll(innerResult.soldItems());
                     ItemStack returnBundle = item.clone();
                     setBundleItems(returnBundle, innerResult.remainingUnsellable());
                     remaining.add(returnBundle);
@@ -175,18 +181,60 @@ public final class ContainerHelper {
             SellCategory category = priceService.category(item);
             if (price > 0D && category != null) {
                 totals.merge(category, price, Double::sum);
+                String customName = item.hasItemMeta() && item.getItemMeta().hasDisplayName() && item.getItemMeta().displayName() != null
+                    ? LegacyComponentSerializer.legacySection().serialize(item.getItemMeta().displayName())
+                    : null;
+                String potionType = extractPotionType(item);
+                soldItems.add(new SoldContainerItem(item.getType(), customName, potionType, category, item.getAmount(), price));
             } else {
                 remaining.add(item);
             }
         }
 
-        return new ContainerResult(totals, remaining);
+        return new ContainerResult(totals, remaining, soldItems);
+    }
+
+    @Nullable
+    public static String extractPotionType(@NotNull ItemStack item) {
+        if (!item.hasItemMeta()) return null;
+        try {
+            ItemMeta meta = item.getItemMeta();
+            if (meta instanceof PotionMeta potion) {
+                if (potion.getBasePotionType() != null) {
+                    return potion.getBasePotionType().name();
+                }
+                if (potion.hasCustomEffects() && !potion.getCustomEffects().isEmpty()) {
+                    return potion.getCustomEffects().getFirst().getType().key().value().toUpperCase(Locale.ROOT);
+                }
+            }
+        } catch (Throwable ignored) {
+            // Server registry not available in unit test environments
+        }
+        return null;
+    }
+
+    public record SoldContainerItem(
+        @NotNull Material material,
+        @Nullable String customName,
+        @Nullable String potionType,
+        @NotNull SellCategory category,
+        int amount,
+        double basePrice
+    ) {
+        public SoldContainerItem(@NotNull Material material, @Nullable String customName,
+                                 @NotNull SellCategory category, int amount, double basePrice) {
+            this(material, customName, null, category, amount, basePrice);
+        }
     }
 
     /** Result of processing container items. */
     public record ContainerResult(
         @NotNull Map<SellCategory, Double> totals,
-        @NotNull List<ItemStack> remainingUnsellable
+        @NotNull List<ItemStack> remainingUnsellable,
+        @NotNull List<SoldContainerItem> soldItems
     ) {
+        public ContainerResult(@NotNull Map<SellCategory, Double> totals, @NotNull List<ItemStack> remainingUnsellable) {
+            this(totals, remainingUnsellable, List.of());
+        }
     }
 }

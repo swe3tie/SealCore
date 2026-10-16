@@ -113,3 +113,10 @@ economy:
   worth:
     title: 'ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ — {PAGE}/{MAX_PAGE}'
 
+  # Lệnh mở cửa hàng (/shop).
+  shop:
+    purchased: '<white>Bạn đã mua <green>{AMOUNT}x {ITEM}</green> với giá {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}!'
+    not-enough: '<red>Bạn không đủ tiền để mua vật phẩm này.'
+    inventory-full: '<red>Túi đồ của bạn không đủ chỗ trống.'
+    spawner-unavailable: '<yellow>Tính năng mua lồng sinh sản sẽ sớm ra mắt!'
+

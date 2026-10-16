@@ -174,6 +174,11 @@ public final class WorthGui {
             List<Component> lore = new ArrayList<>(loreTemplate.size());
             for (String line : loreTemplate) {
                 String rendered = line
+                    .replace("{CURRENCY_PREFIX}", "<green>$")
+                    .replace("{CURRENCY_SUFFIX}", "")
+                    .replace("{PRICE_FORMATTED}", worthFormatted)
+                    .replace("{PRICE_COMPACT}", worthFormatted)
+                    .replace("{PRICE}", MoneyFormat.formatStandard(worth))
                     .replace("{WORTH_FORMATTED}", worthFormatted)
                     .replace("{WORTH}", MoneyFormat.formatStandard(worth))
                     .replace("{SECTION_MULTIPLIER}", multFormatted)

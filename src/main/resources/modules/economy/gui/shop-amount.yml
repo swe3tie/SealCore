@@ -1,0 +1,59 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / GUI: shop-amount                           │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+# Placeholders: {ITEM}, {BUYING_ITEM}, {AMOUNT}, {CURRENCY_PREFIX}, {PRICE_FORMATTED}, {CURRENCY_SUFFIX}, {MAX_VALUE}
+
+config-version: 2
+
+title: '<dark_gray>ᴄʜọɴ ѕố ʟượɴɢ'
+rows: 3
+
+buying-item:
+  slot: 14
+  name: ''
+  lore: []
+
+reset:
+  slot: 10
+  material: RED_STAINED_GLASS_PANE
+  name: '<red>đặᴛ ʟạɪ 1'
+
+sub10:
+  slot: 11
+  material: RED_STAINED_GLASS_PANE
+  name: '<red>-10'
+
+sub1:
+  slot: 12
+  material: RED_STAINED_GLASS_PANE
+  name: '<red>-1'
+
+add1:
+  slot: 16
+  material: LIME_STAINED_GLASS_PANE
+  name: '<green>+1'
+
+add10:
+  slot: 17
+  material: LIME_STAINED_GLASS_PANE
+  name: '<green>+10'
+
+max:
+  slot: 18
+  material: LIME_STAINED_GLASS_PANE
+  name: '<green>ᴛốɪ đᴀ ({MAX_VALUE})'
+
+cancel:
+  slot: 22
+  material: RED_STAINED_GLASS_PANE
+  name: '<red>ʜᴜỷ ʙỏ'
+  lore:
+    - '<white>Nhấp để huỷ bỏ'
+
+confirm:
+  slot: 24
+  material: LIME_STAINED_GLASS_PANE
+  name: '<green>хáᴄ ɴʜậɴ ᴍᴜᴀ'
+  lore:
+    - '<white>{AMOUNT} <accent>{BUYING_ITEM} <white>với giá {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'

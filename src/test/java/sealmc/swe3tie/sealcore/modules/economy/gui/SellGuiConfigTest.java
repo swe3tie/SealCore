@@ -43,6 +43,11 @@ class SellGuiConfigTest {
         assertEquals(20, progress.slotsForPage(2).size());
         assertEquals(9, progress.slotsForPage(2).getFirst()); // 1-based slot 10 -> 0-based index 9
         assertEquals(21, progress.allProgressSlots().size());
+        assertEquals(49, progress.summarySlot());
+        assertEquals(45, progress.previousSlot());
+        assertEquals(53, progress.nextSlot());
+        assertEquals("<#9CC0D9>{SECTION}", progress.summary().name());
+        assertEquals(4, progress.summary().lore().size());
         assertNotNull(progress.inProgress());
         assertNotNull(progress.completed());
         assertNotNull(progress.incomplete());
@@ -50,6 +55,10 @@ class SellGuiConfigTest {
         assertEquals(16, config.progressBar().length());
         assertEquals("<#9CC0D9>■", config.progressBar().complete());
         assertEquals("<dark_gray>■", config.progressBar().incomplete());
+
+        assertEquals("<dark_gray>ʜệ ѕố ʙáɴ", config.multiplierTitle());
+        assertEquals(3, config.multiplierRows());
+        assertEquals(27, config.multiplierSize());
     }
 
     @Test

@@ -11,7 +11,7 @@ title: "ɢɪá ᴛʀị ᴠậᴛ ᴘʜẩᴍ — {PAGE}/{MAX_PAGE}"
 rows: 6
 
 item-lore:
-  - "<white>Giá trị: <green>${WORTH_FORMATTED}"
+  - "<white>Giá trị: {CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}"
   - "<white>Hệ số: <#9CC0D9>{SECTION_MULTIPLIER}x"
   - "<white>Phân loại: <#9CC0D9>{SECTION}"
 

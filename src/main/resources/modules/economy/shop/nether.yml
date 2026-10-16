@@ -1,0 +1,58 @@
+# ╭──────────────────────────────────────────────────────────────╮
+# │ Module: economy / Shop: nether                                │
+# ╰──────────────────────────────────────────────────────────────╯
+# All slots use 1-based numbering. MiniMessage and {PLACEHOLDER} syntax supported.
+
+config-version: 1
+
+section:
+  slot: 13
+  material: NETHERRACK
+  name: '<red>ɴᴇᴛʜᴇʀ'
+  lore:
+    - '<white>Nhấp để mở cửa hàng {SECTION}'
+
+title: '<dark_gray>ᴄửᴀ ʜàɴɢ {SECTION}'
+rows: 3
+currency: money
+
+lore:
+  - '{CURRENCY_PREFIX}{PRICE_FORMATTED}{CURRENCY_SUFFIX}'
+
+items:
+  blaze_rod:
+    slot: 10
+    material: BLAZE_ROD
+    price: 150
+  nether_wart:
+    slot: 11
+    material: NETHER_WART
+    price: 50
+  glowstone_dust:
+    slot: 12
+    material: GLOWSTONE_DUST
+    price: 15
+  magma_cream:
+    slot: 13
+    material: MAGMA_CREAM
+    price: 35
+  ghast_tear:
+    slot: 14
+    material: GHAST_TEAR
+    price: 750
+  quartz:
+    slot: 15
+    material: QUARTZ
+    price: 30
+  soul_sand:
+    slot: 16
+    material: SOUL_SAND
+    price: 50
+  magma_block:
+    slot: 17
+    material: MAGMA_BLOCK
+    price: 100
+  crying_obsidian:
+    slot: 18
+    material: CRYING_OBSIDIAN
+    price: 250
